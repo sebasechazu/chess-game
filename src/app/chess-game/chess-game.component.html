@@ -1,0 +1,126 @@
+<div class="p-4 container mx-auto">
+  
+  <!-- Loader -->
+  <div *ngIf="isLoading()" class="w-full h-64 flex justify-center items-center">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+  </div>
+  
+  <div *ngIf="!isLoading() && gameInitialized()" class="chess-game-container mobile-grid-container">
+    <!-- Información del juego -->
+    <div class="game-info bg-slate-100 p-4 rounded-lg mb-4">
+      <div class="flex justify-between items-center">
+        <div class="text-xl font-bold">
+          Turno: <span [class.text-white]="currentTurn() === 'white'" 
+                       [class.text-black]="currentTurn() === 'black'"
+                       [class.bg-gray-800]="currentTurn() === 'white'"
+                       [class.py-1]="currentTurn() === 'white'"
+                       [class.px-2]="currentTurn() === 'white'"
+                       [class.rounded]="currentTurn() === 'white'">
+            {{ currentTurn() === 'white' ? 'Blancas' : 'Negras' }}
+          </span>
+        </div>
+        <button (click)="resetGame()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Reiniciar
+        </button>
+      </div>
+      
+      <!-- Estadísticas -->
+      <div class="grid grid-cols-3 gap-4 mt-4" [class]="getStatsAnimationClass()">
+        <div class="bg-white p-3 rounded-lg shadow text-center">
+          <div class="text-sm text-gray-500">Movimientos</div>
+          <div class="text-2xl font-bold">{{ totalMovements() }}</div>
+        </div>
+        <div class="bg-white p-3 rounded-lg shadow text-center">
+          <div class="text-sm text-gray-500">Capturas Blancas</div>
+          <div class="text-2xl font-bold">{{ whiteCaptures() }}</div>
+        </div>
+        <div class="bg-white p-3 rounded-lg shadow text-center">
+          <div class="text-sm text-gray-500">Capturas Negras</div>
+          <div class="text-2xl font-bold">{{ blackCaptures() }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tablero de ajedrez -->
+    <div class="chess-board mb-6">
+      <!-- Coordenadas superiores (letras a-h) -->
+      <div class="coordinates top-coordinates">
+        <div *ngFor="let col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; let j = index" class="coord-cell" [style.gridColumn]="j+1">{{ col }}</div>
+      </div>
+      
+      <!-- Coordenadas izquierdas (números 8-1) -->
+      <div class="coordinates left-coordinates">
+        <div *ngFor="let row of [8, 7, 6, 5, 4, 3, 2, 1]; let i = index" class="coord-cell number-cell" [style.gridRow]="i+1">{{ row }}</div>
+      </div>
+      
+      <!-- Tablero principal -->
+      <div class="board-grid" cdkDropListGroup>
+        <ng-container *ngFor="let row of board(); let i = index">
+          <div *ngFor="let square of row; let j = index" 
+              class="chess-square-container"
+              cdkDropList
+              [id]="'drop-' + square.position"
+              [cdkDropListData]="square"
+              (cdkDropListDropped)="onPieceDrop($event)"
+              (cdkDropListEntered)="onDragEntered($event)"
+              (cdkDropListExited)="onDragExited($event)">
+            
+            <div [class]="getSquareClass(square)">
+              <!-- Piezas que no se pueden arrastrar (turno incorrecto o juego terminado) -->
+              <div *ngIf="square.piece && (square.piece.color !== currentTurn() || gameOver())" class="piece-container">
+                <app-chess-piece [piece]="square.piece"></app-chess-piece>
+              </div>
+              
+              <!-- Piezas del turno actual que se pueden arrastrar -->
+              <div *ngIf="square.piece && square.piece.color === currentTurn() && !gameOver()" 
+                  cdkDrag
+                  [cdkDragData]="square.piece"
+                  (cdkDragStarted)="onDragStarted($event)"
+                  (cdkDragEnded)="onDragEnded($event)"
+                  class="piece-container draggable-piece">
+                <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                
+                <!-- Template para el preview al arrastrar -->
+                <ng-template cdkDragPreview>
+                  <div class="piece-preview">
+                    <img [src]="square.piece.image" [alt]="square.piece.type">
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+      
+      <!-- Coordenadas derechas -->
+      <div class="coordinates right-coordinates">
+        <div *ngFor="let row of [8, 7, 6, 5, 4, 3, 2, 1]; let i = index" class="coord-cell number-cell" [style.gridRow]="i+1">{{ row }}</div>
+      </div>
+      
+      <!-- Coordenadas inferiores -->
+      <div class="coordinates bottom-coordinates">
+        <div *ngFor="let col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; let j = index" class="coord-cell" [style.gridColumn]="j+1">{{ col }}</div>
+      </div>
+    </div>
+    
+    <!-- Historial de movimientos -->
+    <div class="move-history bg-slate-100 p-4 rounded-lg mt-4">
+      <h2 class="text-xl font-bold mb-2">Historial de Movimientos</h2>
+      <div class="grid grid-cols-2 gap-2">
+        <ng-container *ngFor="let move of moveHistory(); let i = index">
+          <div class="move-number" *ngIf="i % 2 === 0">{{ (i / 2) + 1 }}.</div>
+          <div class="move">{{ move }}</div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Victoria -->
+  <app-modal-game *ngIf="showVictoryModal()" 
+    [title]="'¡Partida finalizada!'" 
+    [content]="winnerColor() === 'white' ? 'Ganan las blancas' : 
+              winnerColor() === 'black' ? 'Ganan las negras' : 
+              'Partida en tablas'"
+    (closeModal)="closeVictoryModal()">
+  </app-modal-game>
+</div>
