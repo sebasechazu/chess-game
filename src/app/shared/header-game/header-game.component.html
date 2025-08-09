@@ -1,0 +1,31 @@
+<div class="bg-slate-100 p-4 rounded-lg mb-4">
+  <div class="flex justify-between items-center">
+    <div class="text-xl font-bold">
+      Turno: <span [class.text-white]="currentTurn === 'white'" [class.text-black]="currentTurn === 'black'"
+        [class.bg-gray-800]="currentTurn === 'white'" [class.py-1]="currentTurn === 'white'"
+        [class.px-2]="currentTurn === 'white'" [class.rounded]="currentTurn === 'white'">
+        {{ currentTurn === 'white' ? 'Blancas' : 'Negras' }}
+      </span>
+    </div>
+    <button (click)="onReset()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      Reiniciar
+    </button>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="grid grid-cols-3 gap-4 mt-4" [class]="statsAnimationClass">
+    <div class="bg-white p-3 rounded-lg shadow text-center">
+      <div class="text-sm text-gray-500">Movimientos</div>
+      <div class="text-2xl font-bold">{{ totalMovements }}</div>
+    </div>
+    <div class="bg-white p-3 rounded-lg shadow text-center">
+      <div class="text-sm text-gray-500">Capturas Blancas</div>
+      <div class="text-2xl font-bold">{{ whiteCaptures }}</div>
+    </div>
+    <div class="bg-white p-3 rounded-lg shadow text-center">
+      <div class="text-sm text-gray-500">Capturas Negras</div>
+      <div class="text-2xl font-bold">{{ blackCaptures }}</div>
+    </div>
+  </div>
+  
+</div>
