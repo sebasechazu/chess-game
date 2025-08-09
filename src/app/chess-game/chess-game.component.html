@@ -1,11 +1,15 @@
 <div class="p-4 container mx-auto">
   
   <!-- Loader -->
-  <div *ngIf="isLoading()" class="w-full h-64 flex justify-center items-center">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-  </div>
-  
-  <div *ngIf="!isLoading() && gameInitialized()" class="chess-game-container mobile-grid-container">
+  @if (isLoading()) {
+    <div class="w-full h-64 flex justify-center items-center">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+    </div>
+  }
+
+
+  @if (!isLoading() && gameInitialized()) {
+    <div class="chess-game-container mobile-grid-container">
     <!-- Información del juego -->
     <div class="game-info bg-slate-100 p-4 rounded-lg mb-4">
       <div class="flex justify-between items-center">
@@ -43,63 +47,73 @@
     
     <!-- Tablero de ajedrez -->
     <div class="chess-board mb-6">
+
       <!-- Coordenadas superiores (letras a-h) -->
       <div class="coordinates top-coordinates">
-        <div *ngFor="let col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; let j = index" class="coord-cell" [style.gridColumn]="j+1">{{ col }}</div>
+        @for (col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; track col) {
+          <div class="coord-cell" [style.gridColumn]="$index+1">{{ col }}</div>
+        }
       </div>
       
       <!-- Coordenadas izquierdas (números 8-1) -->
       <div class="coordinates left-coordinates">
-        <div *ngFor="let row of [8, 7, 6, 5, 4, 3, 2, 1]; let i = index" class="coord-cell number-cell" [style.gridRow]="i+1">{{ row }}</div>
+        @for (row of [8, 7, 6, 5, 4, 3, 2, 1]; track row) {
+          <div class="coord-cell number-cell" [style.gridRow]="$index+1">{{ row }}</div>
+        }
       </div>
       
       <!-- Tablero principal -->
       <div class="board-grid" cdkDropListGroup>
-        <ng-container *ngFor="let row of board(); let i = index">
-          <div *ngFor="let square of row; let j = index" 
-              class="chess-square-container"
-              cdkDropList
-              [id]="'drop-' + square.position"
-              [cdkDropListData]="square"
-              (cdkDropListDropped)="onPieceDrop($event)"
-              (cdkDropListEntered)="onDragEntered($event)"
-              (cdkDropListExited)="onDragExited($event)">
-            
-            <div [class]="getSquareClass(square)">
-              <!-- Piezas que no se pueden arrastrar (turno incorrecto o juego terminado) -->
-              <div *ngIf="square.piece && (square.piece.color !== currentTurn() || gameOver())" class="piece-container">
-                <app-chess-piece [piece]="square.piece"></app-chess-piece>
-              </div>
-              
-              <!-- Piezas del turno actual que se pueden arrastrar -->
-              <div *ngIf="square.piece && square.piece.color === currentTurn() && !gameOver()" 
-                  cdkDrag
-                  [cdkDragData]="square.piece"
-                  (cdkDragStarted)="onDragStarted($event)"
-                  (cdkDragEnded)="onDragEnded($event)"
-                  class="piece-container draggable-piece">
-                <app-chess-piece [piece]="square.piece"></app-chess-piece>
-                
-                <!-- Template para el preview al arrastrar -->
-                <ng-template cdkDragPreview>
-                  <div class="piece-preview">
-                    <img [src]="square.piece.image" [alt]="square.piece.type">
+        @for (row of board(); track row) {
+          @for (square of row; track square) {
+            <div class="chess-square-container"
+                cdkDropList
+                [id]="'drop-' + square.position"
+                [cdkDropListData]="square"
+                (cdkDropListDropped)="onPieceDrop($event)"
+                (cdkDropListEntered)="onDragEntered($event)"
+                (cdkDropListExited)="onDragExited($event)">
+              <div [class]="getSquareClass(square)">
+                <!-- Piezas que no se pueden arrastrar (turno incorrecto o juego terminado) -->
+                @if (square.piece && (square.piece.color !== currentTurn() || gameOver())) {
+                  <div class="piece-container">
+                    <app-chess-piece [piece]="square.piece"></app-chess-piece>
                   </div>
-                </ng-template>
+                }
+                <!-- Piezas del turno actual que se pueden arrastrar -->
+                @if (square.piece && square.piece.color === currentTurn() && !gameOver()) {
+                  <div cdkDrag
+                      [cdkDragData]="square.piece"
+                      (cdkDragStarted)="onDragStarted($event)"
+                      (cdkDragEnded)="onDragEnded($event)"
+                      class="piece-container draggable-piece">
+                    <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                    <!-- Template para el preview al arrastrar -->
+                    <ng-template cdkDragPreview>
+                      <div class="piece-preview">
+                        <img [src]="square.piece.image" [alt]="square.piece.type">
+                      </div>
+                    </ng-template>
+                  </div>
+                }
               </div>
             </div>
-          </div>
-        </ng-container>
+          }
+        }
       </div>
       
       <!-- Coordenadas derechas -->
       <div class="coordinates right-coordinates">
-        <div *ngFor="let row of [8, 7, 6, 5, 4, 3, 2, 1]; let i = index" class="coord-cell number-cell" [style.gridRow]="i+1">{{ row }}</div>
+        @for (row of [8, 7, 6, 5, 4, 3, 2, 1]; track row) {
+          <div class="coord-cell number-cell" [style.gridRow]="$index+1">{{ row }}</div>
+        }
       </div>
       
       <!-- Coordenadas inferiores -->
       <div class="coordinates bottom-coordinates">
-        <div *ngFor="let col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; let j = index" class="coord-cell" [style.gridColumn]="j+1">{{ col }}</div>
+        @for (col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; track col) {
+          <div class="coord-cell" [style.gridColumn]="$index+1">{{ col }}</div>
+        }
       </div>
     </div>
     
@@ -107,20 +121,25 @@
     <div class="move-history bg-slate-100 p-4 rounded-lg mt-4">
       <h2 class="text-xl font-bold mb-2">Historial de Movimientos</h2>
       <div class="grid grid-cols-2 gap-2">
-        <ng-container *ngFor="let move of moveHistory(); let i = index">
-          <div class="move-number" *ngIf="i % 2 === 0">{{ (i / 2) + 1 }}.</div>
+        @for (move of moveHistory(); track move) {
+          @if ($index % 2 === 0) {
+            <div class="move-number">{{ ($index / 2) + 1 }}.</div>
+          }
           <div class="move">{{ move }}</div>
-        </ng-container>
+        }
       </div>
     </div>
   </div>
   
-  <!-- Modal de Victoria -->
-  <app-modal-game *ngIf="showVictoryModal()" 
-    [title]="'¡Partida finalizada!'" 
-    [content]="winnerColor() === 'white' ? 'Ganan las blancas' : 
-              winnerColor() === 'black' ? 'Ganan las negras' : 
-              'Partida en tablas'"
-    (closeModal)="closeVictoryModal()">
-  </app-modal-game>
-</div>
+    <!-- Modal de Victoria -->
+    @if (showVictoryModal()) {
+      <app-modal-game 
+        [title]="'¡Partida finalizada!'" 
+        [content]="winnerColor() === 'white' ? 'Ganan las blancas' : 
+                  winnerColor() === 'black' ? 'Ganan las negras' : 
+                  'Partida en tablas'"
+        (closeModal)="closeVictoryModal()">
+      </app-modal-game>
+    }
+  }
+
