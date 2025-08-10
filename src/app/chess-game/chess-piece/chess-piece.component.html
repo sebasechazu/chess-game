@@ -1,4 +1,11 @@
-<div class="w-full h-full flex justify-center items-center z-10 cursor-grab">
-    <img [src]="imageSrc" [alt]="piece.type + ' ' + piece.color"
-        class="w-full h-full object-contain pointer-events-none select-none bg-white p-1" draggable="false">
+<div class="w-full h-full flex items-center justify-center z-10">
+        <img
+            ngSrc="{{imageSrc}}"
+            [alt]="piece.type + ' ' + piece.color"
+            width="45"
+            height="45"
+            class="w-full h-full object-cover pointer-events-none select-none bg-white"
+            draggable="false"
+            priority
+        >
 </div>

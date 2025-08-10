@@ -1,26 +1,34 @@
-import { Injectable, signal } from '@angular/core';
-import { ChessPiece } from '../interfaces/chess-piece.interface';
-import { ChessSquare } from '../interfaces/chess-square.interface';
-
-
+import { Injectable, signal, computed } from '@angular/core';
+import { ChessPiece, PieceType, PieceColor } from '../interfaces/chess-piece.interface';
+import { ChessSquare, SquareColor } from '../interfaces/chess-square.interface';
 
 @Injectable({ providedIn: 'root' })
 export class ChessService {
 
-  board = signal<ChessSquare[][]>([]);
-  currentTurn = signal<'white' | 'black'>('white');
-  gameOver = signal<boolean>(false);
-  winnerColor = signal<'white' | 'black' | 'draw' | null>(null);
-  showVictoryModal = signal<boolean>(false);
-  gameInitialized = signal<boolean>(false);
-  showInitialAnimations = signal<boolean>(false);
-  isLoading = signal<boolean>(true);
-  moveHistory = signal<string[]>([]);
-  totalMovements = signal<number>(0);
-  whiteCaptures = signal<number>(0);
-  blackCaptures = signal<number>(0);
+  /**
+   * Estado del tablero
+   */
+  public readonly board = signal<ChessSquare[][]>([]);
+  public readonly currentTurn = signal<PieceColor>(PieceColor.White);
+  public readonly gameOver = signal<boolean>(false);
+  public readonly winnerColor = signal<PieceColor | 'draw' | null>(null);
+  public readonly showVictoryModal = signal<boolean>(false);
+  public readonly gameInitialized = signal<boolean>(false);
+  public readonly showInitialAnimations = signal<boolean>(false);
+  public readonly isLoading = signal<boolean>(true);
+  public readonly moveHistory = signal<string[]>([]);
+  public readonly totalMovements = signal<number>(0);
+  public readonly whiteCaptures = signal<number>(0);
+  public readonly blackCaptures = signal<number>(0);
+  
+  /**
+   * Estado derivado: ¿el juego está activo?
+   */
+  public readonly isGameActive = computed(() => this.gameInitialized() && !this.gameOver());
 
-  // Inicializa el juego
+  /**
+   * Inicializa el juego
+   */
   initializeGame(): void {
     this.isLoading.set(true);
     const newBoard: ChessSquare[][] = [];
@@ -32,7 +40,7 @@ export class ChessService {
         const position = `${file}${rank}`;
         boardRow.push({
           position,
-          color: (row + col) % 2 === 0 ? 'light' : 'dark',
+          color: (row + col) % 2 === 0 ? SquareColor.Light : SquareColor.Dark,
           piece: null
         });
       }
@@ -40,7 +48,7 @@ export class ChessService {
     }
     this.setupInitialPosition(newBoard);
     this.board.set(newBoard);
-    this.currentTurn.set('white');
+  this.currentTurn.set(PieceColor.White);
     this.gameOver.set(false);
     this.isLoading.set(false);
     this.gameInitialized.set(true);
@@ -54,45 +62,28 @@ export class ChessService {
     this.blackCaptures.set(0);
   }
 
-  // Configura la posición inicial de las piezas
+  /**
+   * Configura la posición inicial de las piezas
+   */
   private setupInitialPosition(board: ChessSquare[][]): void {
-    this.placePiece(board, 'a1', { id: 1, type: 'rook', color: 'white', position: 'a1' });
-    this.placePiece(board, 'b1', { id: 2, type: 'knight', color: 'white', position: 'b1' });
-    this.placePiece(board, 'c1', { id: 3, type: 'bishop', color: 'white', position: 'c1' });
-    this.placePiece(board, 'd1', { id: 4, type: 'queen', color: 'white', position: 'd1' });
-    this.placePiece(board, 'e1', { id: 5, type: 'king', color: 'white', position: 'e1' });
-    this.placePiece(board, 'f1', { id: 6, type: 'bishop', color: 'white', position: 'f1' });
-    this.placePiece(board, 'g1', { id: 7, type: 'knight', color: 'white', position: 'g1' });
-    this.placePiece(board, 'h1', { id: 8, type: 'rook', color: 'white', position: 'h1' });
+  const pieceOrder = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, PieceType.Queen, PieceType.King, PieceType.Bishop, PieceType.Knight, PieceType.Rook] as const;
+
     for (let col = 0; col < 8; col++) {
       const file = String.fromCharCode(97 + col);
-      this.placePiece(board, `${file}2`, {
-        id: 9 + col,
-        type: 'pawn',
-        color: 'white',
-        position: `${file}2`
-      });
+  this.placePiece(board, `${file}1`, { id: col + 1, type: pieceOrder[col], color: PieceColor.White, position: `${file}1` });
+  this.placePiece(board, `${file}2`, { id: 9 + col, type: PieceType.Pawn, color: PieceColor.White, position: `${file}2` });
     }
-    this.placePiece(board, 'a8', { id: 17, type: 'rook', color: 'black', position: 'a8' });
-    this.placePiece(board, 'b8', { id: 18, type: 'knight', color: 'black', position: 'b8' });
-    this.placePiece(board, 'c8', { id: 19, type: 'bishop', color: 'black', position: 'c8' });
-    this.placePiece(board, 'd8', { id: 20, type: 'queen', color: 'black', position: 'd8' });
-    this.placePiece(board, 'e8', { id: 21, type: 'king', color: 'black', position: 'e8' });
-    this.placePiece(board, 'f8', { id: 22, type: 'bishop', color: 'black', position: 'f8' });
-    this.placePiece(board, 'g8', { id: 23, type: 'knight', color: 'black', position: 'g8' });
-    this.placePiece(board, 'h8', { id: 24, type: 'rook', color: 'black', position: 'h8' });
+
     for (let col = 0; col < 8; col++) {
       const file = String.fromCharCode(97 + col);
-      this.placePiece(board, `${file}7`, {
-        id: 25 + col,
-        type: 'pawn',
-        color: 'black',
-        position: `${file}7`
-      });
+  this.placePiece(board, `${file}8`, { id: 17 + col, type: pieceOrder[col], color: PieceColor.Black, position: `${file}8` });
+  this.placePiece(board, `${file}7`, { id: 25 + col, type: PieceType.Pawn, color: PieceColor.Black, position: `${file}7` });
     }
   }
 
-  // Coloca una pieza en el tablero
+  /**
+   * Coloca una pieza en el tablero
+   */
   private placePiece(board: ChessSquare[][], position: string, piece: ChessPiece): void {
     const [file, rank] = position.split('');
     const col = file.charCodeAt(0) - 97;
@@ -102,7 +93,9 @@ export class ChessService {
     }
   }
 
-  // Verifica si un movimiento es legal
+  /**
+   * Verifica si un movimiento es legal
+   */
   isLegalMove(board: ChessSquare[][], sourcePos: string, targetPos: string): boolean {
     const [sourceFile, sourceRank] = sourcePos.split('');
     const sourceCol = sourceFile.charCodeAt(0) - 97;
@@ -118,7 +111,9 @@ export class ChessService {
     return true;
   }
 
-  // Mueve una pieza en el tablero
+  /**
+   * Realiza el movimiento de una pieza y actualiza el historial y capturas
+   */
   movePiece(board: ChessSquare[][], sourcePos: string, targetPos: string): void {
     const [sourceFile, sourceRank] = sourcePos.split('');
     const sourceCol = sourceFile.charCodeAt(0) - 97;
@@ -134,25 +129,38 @@ export class ChessService {
       this.moveHistory.update(history => [...history, moveNotation]);
       board[targetRow][targetCol].piece = newPiece;
       board[sourceRow][sourceCol].piece = null;
+      // Actualiza contadores de capturas
+      if (capturedPiece) {
+        if (capturedPiece.color === PieceColor.White) {
+          this.whiteCaptures.update(c => c + 1);
+        } else {
+          this.blackCaptures.update(c => c + 1);
+        }
+      }
+      this.totalMovements.update(m => m + 1);
     }
   }
 
-  // Genera la notación del movimiento
+  /**
+   * Genera la notación del movimiento
+   */
   generateMoveNotation(piece: ChessPiece, sourcePos: string, targetPos: string, capturedPiece: ChessPiece | null): string {
-    const pieceSymbols: Record<string, string> = {
-      'king': 'K',
-      'queen': 'Q',
-      'rook': 'R',
-      'bishop': 'B',
-      'knight': 'N',
-      'pawn': ''
+    const pieceSymbols: Record<PieceType, string> = {
+      [PieceType.King]: 'K',
+      [PieceType.Queen]: 'Q',
+      [PieceType.Rook]: 'R',
+      [PieceType.Bishop]: 'B',
+      [PieceType.Knight]: 'N',
+      [PieceType.Pawn]: ''
     };
     const symbol = pieceSymbols[piece.type];
     const capture = capturedPiece ? 'x' : '';
     return `${symbol}${sourcePos}${capture}${targetPos}`;
   }
 
-  // Verifica el estado del juego
+  /**
+   * Verifica el estado del juego
+   */
   checkGameStatus(): void {
     const currentBoard = this.board();
     let whiteKingExists = false;
@@ -160,7 +168,7 @@ export class ChessService {
     for (const row of currentBoard) {
       for (const square of row) {
         if (square.piece?.type === 'king') {
-          if (square.piece.color === 'white') {
+          if (square.piece.color === PieceColor.White) {
             whiteKingExists = true;
           } else {
             blackKingExists = true;
@@ -170,11 +178,11 @@ export class ChessService {
     }
     if (!whiteKingExists) {
       this.gameOver.set(true);
-      this.winnerColor.set('black');
+  this.winnerColor.set(PieceColor.Black);
       this.showVictoryModal.set(true);
     } else if (!blackKingExists) {
       this.gameOver.set(true);
-      this.winnerColor.set('white');
+  this.winnerColor.set(PieceColor.White);
       this.showVictoryModal.set(true);
     }
   }

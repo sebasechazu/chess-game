@@ -1,0 +1,75 @@
+<div
+    class="w-full max-w-[640px] min-h-[640px] aspect-square mx-auto grid grid-cols-[24px_1fr_24px] grid-rows-[24px_1fr_24px] gap-0 mb-6">
+    <!-- Coordenadas superiores (letras a-h) -->
+    <div class="col-start-2 row-start-1 grid grid-cols-8 justify-items-center items-center">
+        @for (col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; track col) {
+        <div class="flex justify-center items-center text-center h-full w-full" [style.gridColumn]="$index+1">{{ col }}
+        </div>
+        }
+    </div>
+    <!-- Coordenadas izquierdas (números 8-1) -->
+    <div class="col-start-1 row-start-2 grid grid-rows-8 items-center justify-items-center">
+        @for (row of [8, 7, 6, 5, 4, 3, 2, 1]; track row) {
+        <div class="flex justify-center items-center text-center h-full w-full text-base" [style.gridRow]="$index+1">{{
+            row }}</div>
+        }
+    </div>
+    <!-- Tablero principal -->
+    <div class="col-start-2 row-start-2 grid grid-cols-8 grid-rows-8 aspect-square border-2 border-gray-700 shadow-lg relative"
+        cdkDropListGroup>
+        @for (row of board; track row)
+        {
+        @for (square of row; track square)
+        {
+        <div class="chess-square-container aspect-square w-full h-full relative flex justify-center items-center box-border"
+            cdkDropList [cdkDropListData]="square" [id]="'drop-' + square.position"
+            (cdkDropListDropped)="onPieceDrop($event)" [ngClass]="{
+                            'bg-yellow-100': square.color === 'light',
+                            'bg-gray-700': square.color === 'dark'
+                        }">
+            <div class="w-full h-full relative transition-colors duration-200 flex justify-center items-center">
+                <!-- Piezas que no se pueden arrastrar (turno incorrecto o juego terminado) -->
+                @if (square.piece && (square.piece.color !== currentTurn || gameOver) && dragging !== square.position) {
+                <div class="piece-container">
+                    <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                </div>
+                }
+                <!-- Piezas del turno actual que se pueden arrastrar -->
+                @if (square.piece && square.piece.color === currentTurn && !gameOver) {
+                <div cdkDrag
+                    (cdkDragStarted)="onDragStarted(square)"
+                    class="flex justify-center items-center w-full h-full cursor-grab z-10 active:cursor-grabbing">
+                    <div class="w-full h-full flex justify-center items-center">
+                        <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                    </div>
+                    <!-- Preview de la pieza arrastrada: igual tamaño y estilo que la pieza colocada -->
+                    <ng-template cdkDragPreview>
+                        <div class="flex items-center justify-center max-w-[48px] max-h-[48px]">
+                            <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                        </div>
+                    </ng-template>
+                </div>
+                }
+            </div>
+        </div>
+        }
+        }
+    </div>
+
+    <!-- Coordenadas derechas -->
+    <div class="col-start-3 row-start-2 grid grid-rows-8 items-center justify-items-center">
+        @for (row of [8, 7, 6, 5, 4, 3, 2, 1]; track row) {
+        <div class="flex justify-center items-center text-center h-full w-full font-bold text-base"
+            [style.gridRow]="$index+1">{{ row }}</div>
+        }
+    </div>
+
+    <!-- Coordenadas inferiores -->
+    <div class="col-start-2 row-start-3 grid grid-cols-8 justify-items-center items-center">
+        @for (col of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; track col) {
+        <div class="flex justify-center items-center text-center h-full w-full" [style.gridColumn]="$index+1">{{ col }}
+        </div>
+        }
+    </div>
+
+</div>

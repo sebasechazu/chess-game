@@ -1,13 +1,14 @@
 
 
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule,NgOptimizedImage } from '@angular/common';
 import { ChessPiece } from '../../interfaces/chess-piece.interface';
+
 
 @Component({
   selector: 'app-chess-piece',
   templateUrl: './chess-piece.component.html',
-  imports: [CommonModule]
+  imports: [CommonModule, NgOptimizedImage]
 })
 export class ChessPieceComponent {
   @Input() piece!: ChessPiece;
