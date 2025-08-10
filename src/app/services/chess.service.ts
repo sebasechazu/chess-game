@@ -1,14 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { ChessPiece } from '../interfaces/chess-piece.interface';
+import { ChessSquare } from '../interfaces/chess-square.interface';
 
-export interface ChessSquare {
-  position: string;
-  color: 'light' | 'dark';
-  piece: ChessPiece | null;
-}
+
 
 @Injectable({ providedIn: 'root' })
 export class ChessService {
+
   board = signal<ChessSquare[][]>([]);
   currentTurn = signal<'white' | 'black'>('white');
   gameOver = signal<boolean>(false);
@@ -22,6 +20,7 @@ export class ChessService {
   whiteCaptures = signal<number>(0);
   blackCaptures = signal<number>(0);
 
+  // Inicializa el juego
   initializeGame(): void {
     this.isLoading.set(true);
     const newBoard: ChessSquare[][] = [];
@@ -55,6 +54,7 @@ export class ChessService {
     this.blackCaptures.set(0);
   }
 
+  // Configura la posición inicial de las piezas
   private setupInitialPosition(board: ChessSquare[][]): void {
     this.placePiece(board, 'a1', { id: 1, type: 'rook', color: 'white', position: 'a1' });
     this.placePiece(board, 'b1', { id: 2, type: 'knight', color: 'white', position: 'b1' });
@@ -92,6 +92,7 @@ export class ChessService {
     }
   }
 
+  // Coloca una pieza en el tablero
   private placePiece(board: ChessSquare[][], position: string, piece: ChessPiece): void {
     const [file, rank] = position.split('');
     const col = file.charCodeAt(0) - 97;
@@ -101,6 +102,7 @@ export class ChessService {
     }
   }
 
+  // Verifica si un movimiento es legal
   isLegalMove(board: ChessSquare[][], sourcePos: string, targetPos: string): boolean {
     const [sourceFile, sourceRank] = sourcePos.split('');
     const sourceCol = sourceFile.charCodeAt(0) - 97;
@@ -116,6 +118,7 @@ export class ChessService {
     return true;
   }
 
+  // Mueve una pieza en el tablero
   movePiece(board: ChessSquare[][], sourcePos: string, targetPos: string): void {
     const [sourceFile, sourceRank] = sourcePos.split('');
     const sourceCol = sourceFile.charCodeAt(0) - 97;
@@ -134,6 +137,7 @@ export class ChessService {
     }
   }
 
+  // Genera la notación del movimiento
   generateMoveNotation(piece: ChessPiece, sourcePos: string, targetPos: string, capturedPiece: ChessPiece | null): string {
     const pieceSymbols: Record<string, string> = {
       'king': 'K',
@@ -148,6 +152,7 @@ export class ChessService {
     return `${symbol}${sourcePos}${capture}${targetPos}`;
   }
 
+  // Verifica el estado del juego
   checkGameStatus(): void {
     const currentBoard = this.board();
     let whiteKingExists = false;

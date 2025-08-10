@@ -1,20 +1,16 @@
 <div class="p-4 container mx-auto">
 
   <!-- Loader -->
-    @if (isLoading) {
-    <app-spinner-game></app-spinner-game>
+  @if (isLoading) {
+  <app-spinner-game></app-spinner-game>
   }
 
 
-  @if (!isLoading() && gameInitialized()) {
+  @if (!isLoading && gameInitialized) {
   <div class="container mx-auto grid gap-4">
     <!-- Información del juego -->
-    <app-header-game
-    [currentTurn]="currentTurn"
-    [totalMovements]="totalMovements"
-    [whiteCaptures]="whiteCaptures"
-    [blackCaptures]="blackCaptures"
-    ></app-header-game>
+    <app-header-game [currentTurn]="currentTurn" [totalMovements]="totalMovements" [whiteCaptures]="whiteCaptures"
+      [blackCaptures]="blackCaptures"></app-header-game>
 
     <!-- Tablero de ajedrez -->
     <div
@@ -40,31 +36,32 @@
       <div
         class="col-start-2 row-start-2 grid grid-cols-8 grid-rows-8 aspect-square border-2 border-gray-700 shadow-lg relative"
         cdkDropListGroup>
-      @for (row of board; track row) {
+        @for (row of board; track row) {
         @for (square of row; track square) {
-        <div class="chess-square-container aspect-square w-full h-full relative flex justify-center items-center box-border" cdkDropList
-          [id]="'drop-' + square.position" [cdkDropListData]="square" (cdkDropListDropped)="onPieceDrop($event)"
-          (cdkDropListEntered)="onDragEntered($event)" (cdkDropListExited)="onDragExited($event)">
-          <div
-    class="w-full h-full relative transition-colors duration-200 flex justify-center items-center">
+        <div
+          class="chess-square-container aspect-square w-full h-full relative flex justify-center items-center box-border"
+          cdkDropList [id]="'drop-' + square.position" [cdkDropListData]="square"
+          (cdkDropListDropped)="onPieceDrop($event)" (cdkDropListEntered)="onDragEnded($event)"
+          (cdkDropListExited)="onDragExited($event)">
+          <div class="w-full h-full relative transition-colors duration-200 flex justify-center items-center">
             <!-- Piezas que no se pueden arrastrar (turno incorrecto o juego terminado) -->
-        @if (square.piece && (square.piece.color !== currentTurn || gameOver)) {
+            @if (square.piece && (square.piece.color !== currentTurn || gameOver)) {
             <div class="piece-container">
-                  <app-chess-piece [piece]="square.piece"></app-chess-piece>
+              <app-chess-piece [piece]="square.piece"></app-chess-piece>
             </div>
             }
             <!-- Piezas del turno actual que se pueden arrastrar -->
-        @if (square.piece && square.piece.color === currentTurn && !gameOver) {
+            @if (square.piece && square.piece.color === currentTurn && !gameOver) {
             <div cdkDrag [cdkDragData]="square.piece" (cdkDragStarted)="onDragStarted($event)"
               (cdkDragEnded)="onDragEnded($event)"
               class="flex justify-center items-center w-full h-full cursor-grab z-10 active:cursor-grabbing">
               <div class="w-full h-full flex justify-center items-center">
-                    <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                <app-chess-piece [piece]="square.piece"></app-chess-piece>
               </div>
               <!-- Template para el preview al arrastrar usando chess-piece -->
               <ng-template cdkDragPreview>
                 <div class="flex justify-center items-center w-full h-full">
-                      <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                  <app-chess-piece [piece]="square.piece"></app-chess-piece>
                 </div>
               </ng-template>
             </div>
@@ -92,15 +89,15 @@
       </div>
     </div>
 
-  <!-- Historial de movimientos -->
+    <!-- Historial de movimientos -->
     <app-history-game [moveHistory]="moveHistory"></app-history-game>
   </div>
 
   <!-- Modal de Victoria -->
-    @if (showVictoryModal) {
+  @if (showVictoryModal) {
   <app-modal-game [title]="'¡Partida finalizada!'" [content]="winnerColor === 'white' ? 'Ganan las blancas' : 
                   winnerColor === 'black' ? 'Ganan las negras' : 
-                  'Partida en tablas'" (closeModal)="closeVictoryModal && closeVictoryModal()">
+                  'Partida en tablas'" (closeModal)="closeVictoryModal()">
   </app-modal-game>
   }
   }

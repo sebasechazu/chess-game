@@ -1,19 +1,15 @@
 import { Component, OnInit, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { ChessService } from '../services/chess.service';
 import { CommonModule } from '@angular/common';
-import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, CdkDragExit, CdkDragStart, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ChessPieceComponent } from './chess-piece/chess-piece.component';
 import { ModalGameComponent } from '../shared/modal-game/modal-game.component';
 import { SpinnerGameComponent } from '../shared/spinner-game/spinner-game.component';
 import { HistoryGameComponent } from '../shared/history-game/history-game.component';
+import { ChessSquare } from '../interfaces/chess-square.interface';
 import { ChessPiece } from '../interfaces/chess-piece.interface';
 import { HeaderGameComponent } from '../shared/header-game/header-game.component';
 
-interface ChessSquare {
-  position: string;
-  color: 'light' | 'dark';
-  piece: ChessPiece | null;
-}
 
 @Component({
   selector: 'app-chess-game',
@@ -23,6 +19,15 @@ interface ChessSquare {
   imports: [CommonModule, DragDropModule, ChessPieceComponent, ModalGameComponent, HeaderGameComponent, SpinnerGameComponent, HistoryGameComponent]
 })
 export class ChessGameComponent implements OnInit {
+  onDragStarted($event: CdkDragStart<any>) {
+    throw new Error('Method not implemented.');
+  }
+  onDragExited($event: CdkDragExit<ChessSquare, ChessSquare>) {
+    throw new Error('Method not implemented.');
+  }
+  closeVictoryModal() {
+    throw new Error('Method not implemented.');
+  }
   private elementRef = inject(ElementRef);
   private chessService = inject(ChessService);
 
