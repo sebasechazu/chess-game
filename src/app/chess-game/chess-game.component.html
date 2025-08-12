@@ -2,39 +2,26 @@
 
   <!-- Loader -->
   @if (chessService.isLoading()) {
-    <app-spinner-game></app-spinner-game>
+  <app-spinner-game />
   }
 
   @if (!chessService.isLoading() && chessService.gameInitialized()) {
-    <div class="container mx-auto grid gap-4">
-      <!-- Información del juego -->
-      <app-header-game 
-        [currentTurn]="chessService.currentTurn()" 
-        [totalMovements]="chessService.totalMovements()" 
-        [whiteCaptures]="chessService.whiteCaptures()"
-        [blackCaptures]="chessService.blackCaptures()">
-      </app-header-game>
+  <div class="container mx-auto grid gap-4">
 
-      <!-- Tablero de ajedrez extraído a chess-board -->
-      <app-chess-board 
-        [board]="chessService.board()" 
-        [currentTurn]="chessService.currentTurn()" 
-        [gameOver]="chessService.gameOver()">
-      </app-chess-board>
+    <!-- <app-header-game [currentTurn]="chessService.currentTurn()" [totalMovements]="chessService.totalMovements()"
+      [whiteCaptures]="chessService.whiteCaptures()" [blackCaptures]="chessService.blackCaptures()" /> -->
 
-      <!-- Historial de movimientos -->
-      <app-history-game [moveHistory]="chessService.moveHistory()"></app-history-game>
-    </div>
+    <app-chess-board [(board)]="board" [(currentTurn)]="currentTurn" [(gameOver)]="gameOver" />
+
+
+    <!-- <app-history-game [moveHistory]="chessService.moveHistory()" /> -->
+  </div>
   }
 
-  <!-- Modal de Victoria -->
-  @if (chessService.showVictoryModal()) {
-    <app-modal-game 
-      [title]="'¡Partida finalizada!'" 
-      [content]="chessService.winnerColor() === 'white' ? 'Ganan las blancas' : 
-                  chessService.winnerColor() === 'black' ? 'Ganan las negras' : 
-                  'Partida en tablas'" 
-  (closeModal)="chessService.showVictoryModal.set(false)">
-    </app-modal-game>
+
+  @if (chessService.victoryModalData().open) {
+  <app-modal-game [modalData]="chessService.victoryModalData()"
+    (closeModal)="chessService.showVictoryModal.set(false)" />
+
   }
 </div>

@@ -1,34 +1,110 @@
-import { Injectable, signal, computed } from '@angular/core';
+
+import { Injectable, signal, computed, WritableSignal, effect } from '@angular/core';
 import { ChessPiece, PieceType, PieceColor } from '../interfaces/chess-piece.interface';
 import { ChessSquare, SquareColor } from '../interfaces/chess-square.interface';
+import { isValidPawnMove, isValidRookMove, isValidKnightMove, isValidBishopMove, isValidQueenMove, isValidKingMove } from './chess-move-rules';
 
 @Injectable({ providedIn: 'root' })
 export class ChessService {
+  constructor() {
+
+    let previousBoard: ChessSquare[][] | null = null;
+    effect(() => {
+      const currentBoard = this.board();
+      if (!this.gameInitialized()) return;
+
+      if (previousBoard && !this.gameOver()) {
+        if (this.detectBoardChange(previousBoard, currentBoard)) {
+          this.currentTurn.set(
+            this.currentTurn() === PieceColor.White ? PieceColor.Black : PieceColor.White
+          );
+        }
+      }
+      previousBoard = currentBoard.map(row => row.map(square => ({ ...square })));
+      this.checkGameStatus();
+    });
+
+
+  }
+
+  private detectBoardChange(prev: ChessSquare[][], curr: ChessSquare[][]): boolean {
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const prevPiece = prev[row][col].piece;
+        const currPiece = curr[row][col].piece;
+        if (JSON.stringify(prevPiece) !== JSON.stringify(currPiece)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+
+  public readonly board: WritableSignal<ChessSquare[][]> = signal<ChessSquare[][]>([]);
+  public readonly lastMoveResult: WritableSignal<'ok' | 'invalid' | null> = signal<'ok' | 'invalid' | null>(null);
 
   /**
-   * Estado del tablero
+   * Intenta mover una pieza. Si el movimiento es legal, actualiza el tablero y retorna true. Si no, no hace nada y retorna false.
    */
-  public readonly board = signal<ChessSquare[][]>([]);
-  public readonly currentTurn = signal<PieceColor>(PieceColor.White);
-  public readonly gameOver = signal<boolean>(false);
-  public readonly winnerColor = signal<PieceColor | 'draw' | null>(null);
-  public readonly showVictoryModal = signal<boolean>(false);
-  public readonly gameInitialized = signal<boolean>(false);
-  public readonly showInitialAnimations = signal<boolean>(false);
-  public readonly isLoading = signal<boolean>(true);
-  public readonly moveHistory = signal<string[]>([]);
-  public readonly totalMovements = signal<number>(0);
-  public readonly whiteCaptures = signal<number>(0);
-  public readonly blackCaptures = signal<number>(0);
-  
-  /**
-   * Estado derivado: ¿el juego está activo?
-   */
+  tryMove(sourcePos: string, targetPos: string): boolean {
+    const boardSnapshot = this.board();
+    if (!this.isLegalMove(boardSnapshot, sourcePos, targetPos)) {
+      this.lastMoveResult.set('invalid');
+      return false;
+    }
+    // Clonar el tablero
+    const newBoard = boardSnapshot.map(row => row.map(square => ({ ...square })));
+    const [sourceFile, sourceRank] = sourcePos.split('');
+    const sourceCol = sourceFile.charCodeAt(0) - 97;
+    const sourceRow = 8 - parseInt(sourceRank);
+    const [targetFile, targetRank] = targetPos.split('');
+    const targetCol = targetFile.charCodeAt(0) - 97;
+    const targetRow = 8 - parseInt(targetRank);
+    const movingPiece = newBoard[sourceRow][sourceCol].piece;
+    if (!movingPiece) {
+      this.lastMoveResult.set('invalid');
+      return false;
+    }
+    newBoard[targetRow][targetCol].piece = { ...movingPiece, position: targetPos };
+    newBoard[sourceRow][sourceCol].piece = null;
+    this.board.set(newBoard);
+    this.lastMoveResult.set('ok');
+    return true;
+  }
+  public readonly currentTurn: WritableSignal<PieceColor> = signal<PieceColor>(PieceColor.White);
+  public readonly gameOver: WritableSignal<boolean> = signal<boolean>(false);
+  public readonly winnerColor: WritableSignal<PieceColor | 'draw' | null> = signal<PieceColor | 'draw' | null>(null);
+  public readonly showVictoryModal: WritableSignal<boolean> = signal<boolean>(false);
+  public readonly gameInitialized: WritableSignal<boolean> = signal<boolean>(false);
+  public readonly showInitialAnimations: WritableSignal<boolean> = signal<boolean>(false);
+  public readonly isLoading: WritableSignal<boolean> = signal<boolean>(true);
+  public readonly moveHistory: WritableSignal<string[]> = signal<string[]>([]);
+  public readonly totalMovements: WritableSignal<number> = signal<number>(0);
+  public readonly whiteCaptures: WritableSignal<number> = signal<number>(0);
+  public readonly blackCaptures: WritableSignal<number> = signal<number>(0);
+
+  public readonly victoryModalData = computed(() => {
+    if (!this.showVictoryModal()) {
+      return { open: false, title: '', content: '' };
+    }
+    let content = 'Partida en tablas';
+    if (this.winnerColor() === PieceColor.White) {
+      content = 'Ganan las blancas';
+    } else if (this.winnerColor() === PieceColor.Black) {
+      content = 'Ganan las negras';
+    }
+    return {
+      open: true,
+      title: '¡Partida finalizada!',
+      content
+    };
+  });
+
+
   public readonly isGameActive = computed(() => this.gameInitialized() && !this.gameOver());
 
-  /**
-   * Inicializa el juego
-   */
+
   initializeGame(): void {
     this.isLoading.set(true);
     const newBoard: ChessSquare[][] = [];
@@ -48,7 +124,7 @@ export class ChessService {
     }
     this.setupInitialPosition(newBoard);
     this.board.set(newBoard);
-  this.currentTurn.set(PieceColor.White);
+    this.currentTurn.set(PieceColor.White);
     this.gameOver.set(false);
     this.isLoading.set(false);
     this.gameInitialized.set(true);
@@ -62,28 +138,24 @@ export class ChessService {
     this.blackCaptures.set(0);
   }
 
-  /**
-   * Configura la posición inicial de las piezas
-   */
+
   private setupInitialPosition(board: ChessSquare[][]): void {
-  const pieceOrder = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, PieceType.Queen, PieceType.King, PieceType.Bishop, PieceType.Knight, PieceType.Rook] as const;
+    const pieceOrder = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, PieceType.Queen, PieceType.King, PieceType.Bishop, PieceType.Knight, PieceType.Rook] as const;
 
     for (let col = 0; col < 8; col++) {
       const file = String.fromCharCode(97 + col);
-  this.placePiece(board, `${file}1`, { id: col + 1, type: pieceOrder[col], color: PieceColor.White, position: `${file}1` });
-  this.placePiece(board, `${file}2`, { id: 9 + col, type: PieceType.Pawn, color: PieceColor.White, position: `${file}2` });
+      this.placePiece(board, `${file}1`, { id: col + 1, type: pieceOrder[col], color: PieceColor.White, position: `${file}1` });
+      this.placePiece(board, `${file}2`, { id: 9 + col, type: PieceType.Pawn, color: PieceColor.White, position: `${file}2` });
     }
 
     for (let col = 0; col < 8; col++) {
       const file = String.fromCharCode(97 + col);
-  this.placePiece(board, `${file}8`, { id: 17 + col, type: pieceOrder[col], color: PieceColor.Black, position: `${file}8` });
-  this.placePiece(board, `${file}7`, { id: 25 + col, type: PieceType.Pawn, color: PieceColor.Black, position: `${file}7` });
+      this.placePiece(board, `${file}8`, { id: 17 + col, type: pieceOrder[col], color: PieceColor.Black, position: `${file}8` });
+      this.placePiece(board, `${file}7`, { id: 25 + col, type: PieceType.Pawn, color: PieceColor.Black, position: `${file}7` });
     }
   }
 
-  /**
-   * Coloca una pieza en el tablero
-   */
+
   private placePiece(board: ChessSquare[][], position: string, piece: ChessPiece): void {
     const [file, rank] = position.split('');
     const col = file.charCodeAt(0) - 97;
@@ -93,9 +165,6 @@ export class ChessService {
     }
   }
 
-  /**
-   * Verifica si un movimiento es legal
-   */
   isLegalMove(board: ChessSquare[][], sourcePos: string, targetPos: string): boolean {
     const [sourceFile, sourceRank] = sourcePos.split('');
     const sourceCol = sourceFile.charCodeAt(0) - 97;
@@ -105,45 +174,29 @@ export class ChessService {
     const targetRow = 8 - parseInt(targetRank);
     const piece = board[sourceRow][sourceCol].piece;
     const targetSquare = board[targetRow][targetCol];
-    if (targetSquare.piece && targetSquare.piece.color === piece?.color) {
+    if (!piece) return false;
+    if (targetSquare.piece && targetSquare.piece.color === piece.color) {
       return false;
     }
-    return true;
-  }
-
-  /**
-   * Realiza el movimiento de una pieza y actualiza el historial y capturas
-   */
-  movePiece(board: ChessSquare[][], sourcePos: string, targetPos: string): void {
-    const [sourceFile, sourceRank] = sourcePos.split('');
-    const sourceCol = sourceFile.charCodeAt(0) - 97;
-    const sourceRow = 8 - parseInt(sourceRank);
-    const [targetFile, targetRank] = targetPos.split('');
-    const targetCol = targetFile.charCodeAt(0) - 97;
-    const targetRow = 8 - parseInt(targetRank);
-    const piece = board[sourceRow][sourceCol].piece;
-    if (piece) {
-      const newPiece = { ...piece, position: targetPos, hasMoved: true };
-      const capturedPiece = board[targetRow][targetCol].piece;
-      const moveNotation = this.generateMoveNotation(newPiece, sourcePos, targetPos, capturedPiece);
-      this.moveHistory.update(history => [...history, moveNotation]);
-      board[targetRow][targetCol].piece = newPiece;
-      board[sourceRow][sourceCol].piece = null;
-      // Actualiza contadores de capturas
-      if (capturedPiece) {
-        if (capturedPiece.color === PieceColor.White) {
-          this.whiteCaptures.update(c => c + 1);
-        } else {
-          this.blackCaptures.update(c => c + 1);
-        }
-      }
-      this.totalMovements.update(m => m + 1);
+    switch (piece.type) {
+      case PieceType.Pawn:
+        return isValidPawnMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
+      case PieceType.Rook:
+        return isValidRookMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
+      case PieceType.Knight:
+        return isValidKnightMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
+      case PieceType.Bishop:
+        return isValidBishopMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
+      case PieceType.Queen:
+        return isValidQueenMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
+      case PieceType.King:
+        return isValidKingMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
+      default:
+        return false;
     }
   }
 
-  /**
-   * Genera la notación del movimiento
-   */
+
   generateMoveNotation(piece: ChessPiece, sourcePos: string, targetPos: string, capturedPiece: ChessPiece | null): string {
     const pieceSymbols: Record<PieceType, string> = {
       [PieceType.King]: 'K',
@@ -158,9 +211,6 @@ export class ChessService {
     return `${symbol}${sourcePos}${capture}${targetPos}`;
   }
 
-  /**
-   * Verifica el estado del juego
-   */
   checkGameStatus(): void {
     const currentBoard = this.board();
     let whiteKingExists = false;
@@ -178,11 +228,11 @@ export class ChessService {
     }
     if (!whiteKingExists) {
       this.gameOver.set(true);
-  this.winnerColor.set(PieceColor.Black);
+      this.winnerColor.set(PieceColor.Black);
       this.showVictoryModal.set(true);
     } else if (!blackKingExists) {
       this.gameOver.set(true);
-  this.winnerColor.set(PieceColor.White);
+      this.winnerColor.set(PieceColor.White);
       this.showVictoryModal.set(true);
     }
   }

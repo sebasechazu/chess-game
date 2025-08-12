@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
@@ -45,9 +45,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
   ]
 })
 export class ModalGameComponent {
-  @Input() isOpen = signal(false);
-  @Input() title: string = '';
-  @Input() content: string = '';
+  @Input() modalData: { open: boolean; title: string; content: string } = { open: false, title: '', content: '' };
   @Input() showCloseButton: boolean = true;
   @Output() closeModal = new EventEmitter<void>();
 

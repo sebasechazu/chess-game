@@ -1,9 +1,9 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+
+import { Component, model, Input } from '@angular/core';
 import { ChessSquare } from '../../interfaces/chess-square.interface';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NgClass } from '@angular/common';
 import { ChessPieceComponent } from "../chess-piece/chess-piece.component";
-import { ChessService } from '../../services/chess.service';
 import { PieceColor } from '../../interfaces/chess-piece.interface';
 
 @Component({
@@ -12,40 +12,35 @@ import { PieceColor } from '../../interfaces/chess-piece.interface';
   imports: [ChessPieceComponent, DragDropModule, NgClass],
 })
 export class ChessBoardComponent {
-  @Input() board: ChessSquare[][] = [];
-  @Input() currentTurn!: PieceColor;
-  @Input() gameOver!: boolean;
-  @Output() pieceDrop = new EventEmitter<{ source: string; target: string; valid: boolean }>();
-  readonly chessService = inject(ChessService);
 
+  readonly columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  readonly rows = [8, 7, 6, 5, 4, 3, 2, 1];
+
+  board = model<ChessSquare[][]>([]);
+  currentTurn = model<PieceColor>(); 
+  gameOver = model<boolean>(); 
+  
   public dragging: string | null = null;
 
   onPieceDrop(event: CdkDragDrop<ChessSquare>) {
-
-    this.dragging = null;
-    const sourceSquare = event.previousContainer.data;
-    const targetSquare = event.container.data;
-    if (!sourceSquare || !targetSquare) {
-      this.pieceDrop.emit({ source: '', target: '', valid: false });
-      return;
-    }
-    const sourcePosition = sourceSquare.position;
-    const targetPosition = targetSquare.position;
-    const movingPiece = sourceSquare.piece;
-    if (!movingPiece || movingPiece.color !== this.currentTurn) {
-      this.pieceDrop.emit({ source: '', target: '', valid: false });
-      return;
-    }
-    const currentBoard = [...this.board];
-    if (this.chessService.isLegalMove(currentBoard, sourcePosition, targetPosition)) {
-      this.chessService.movePiece(currentBoard, sourcePosition, targetPosition);
-      this.chessService.currentTurn.update(turn => turn === PieceColor.White ? PieceColor.Black : PieceColor.White);
-      this.chessService.board.set([...currentBoard]);
-      this.chessService.checkGameStatus();
-      this.pieceDrop.emit({ source: sourcePosition, target: targetPosition, valid: true });
-    } else {
-      this.pieceDrop.emit({ source: sourcePosition, target: targetPosition, valid: false });
-    }
+  this.dragging = null;
+  const sourceSquare = event.previousContainer.data;
+  const targetSquare = event.container.data;
+  if (!sourceSquare || !targetSquare) return;
+  const sourcePosition = sourceSquare.position;
+  const targetPosition = targetSquare.position;
+  const movingPiece = sourceSquare.piece;
+  if (!movingPiece) return;
+  const newBoard = this.board().map(row => row.map(square => ({ ...square })));
+  const [sourceFile, sourceRank] = sourcePosition.split('');
+  const sourceCol = sourceFile.charCodeAt(0) - 97;
+  const sourceRow = 8 - parseInt(sourceRank);
+  const [targetFile, targetRank] = targetPosition.split('');
+  const targetCol = targetFile.charCodeAt(0) - 97;
+  const targetRow = 8 - parseInt(targetRank);
+  newBoard[targetRow][targetCol].piece = { ...movingPiece, position: targetPosition };
+  newBoard[sourceRow][sourceCol].piece = null;
+  this.board.set(newBoard);
   }
 
   onDragStarted(square: ChessSquare) {
