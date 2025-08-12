@@ -1,11 +1,17 @@
-<div class="w-full h-full flex items-center justify-center z-10">
-        <img
-            ngSrc="{{imageSrc}}"
-            [alt]="piece.type + ' ' + piece.color"
-            width="45"
-            height="45"
-            class="w-full h-full object-cover pointer-events-none select-none bg-white"
-            draggable="false"
-            priority
-        >
+<div class="size-full flex items-center justify-center relative z-10"
+     [class.opacity-0]="!piece"
+     role="img" 
+     [attr.aria-label]="altText()">
+  
+  @if (piece && imageSrc(); as src) {
+    <img [ngSrc]="src"
+         [alt]="altText()"
+         width="45"
+         height="45"
+         class="size-full object-contain pointer-events-none select-none transition-opacity duration-200 hover:opacity-90"
+         draggable="false"
+         priority
+         (error)="onImageError($event)"
+    />
+  }
 </div>
