@@ -41,6 +41,8 @@ export interface ChessSquare {
 export interface MoveResult {
   success: boolean;
   captured?: ChessPiece;
+  error?: string;
+  moveType?: 'normal' | 'capture' | 'castling' | 'enPassant' | 'promotion';
 }
 
 export interface AiMove {

@@ -6,7 +6,6 @@ import { ChessGameComponent } from "./chess-game/chess-game.component";
   selector: 'app-root',
   imports: [ ChessGameComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
 })
 export class App {
   protected readonly title = signal('chess-game');

@@ -1,33 +1,52 @@
 
 import { Injectable, signal, computed, WritableSignal, effect } from '@angular/core';
-import { 
-  ChessPiece, 
-  PieceType, 
-  PieceColor, 
-  ChessSquare, 
-  SquareColor,
+import {
+  ChessPiece,
+  PieceType,
+  PieceColor,
+  ChessSquare,
   MoveResult,
   AiMove,
   MoveData,
   ModalData,
   WinnerType,
   Position,
-  Coordinates,
-  PIECE_VALUES,
-  PIECE_SYMBOLS
+  Coordinates
 } from '../helpers/interfaces';
-import { 
-  isValidPawnMove, 
-  isValidRookMove, 
-  isValidKnightMove, 
-  isValidBishopMove, 
-  isValidQueenMove, 
-  isValidKingMove 
-} from '../helpers/chess-move-rules';
+import {
+  isValidPawnMove,
+  isValidRookMove,
+  isValidKnightMove,
+  isValidBishopMove,
+  isValidQueenMove,
+  isValidKingMove
+} from '../helpers/chess-rules';
+import {
+  positionToCoordinates,
+  getSquareAtPosition,
+  getPieceAtPosition,
+  placePiece,
+  deepCloneBoard,
+  hasBoardChanged,
+  getAllPiecesForColor,
+  findKings,
+  generateMoveNotation,
+  getCenterPositionBonus,
+  getPieceValue,
+  createEmptyBoard,
+  INITIAL_PIECE_ORDER
+} from '../helpers/chess-utils';
 
+/**
+ * Servicio principal del juego de ajedrez
+ * Maneja toda la lógica de negocio, validaciones, estado del juego e IA
+ */
 @Injectable({ providedIn: 'root' })
 export class ChessService {
-  // ===== SIGNALS DE ESTADO =====
+
+  /**
+   * Estado del tablero
+   */
   public readonly board: WritableSignal<ChessSquare[][]> = signal<ChessSquare[][]>([]);
   public readonly currentTurn: WritableSignal<PieceColor> = signal<PieceColor>(PieceColor.White);
   public readonly gameOver: WritableSignal<boolean> = signal<boolean>(false);
@@ -36,27 +55,33 @@ export class ChessService {
   public readonly gameInitialized: WritableSignal<boolean> = signal<boolean>(false);
   public readonly showInitialAnimations: WritableSignal<boolean> = signal<boolean>(false);
   public readonly isLoading: WritableSignal<boolean> = signal<boolean>(true);
+
+  /**
+   * Historial de movimientos realizados
+   */
   public readonly moveHistory: WritableSignal<string[]> = signal<string[]>([]);
   public readonly totalMovements: WritableSignal<number> = signal<number>(0);
   public readonly whiteCaptures: WritableSignal<number> = signal<number>(0);
   public readonly blackCaptures: WritableSignal<number> = signal<number>(0);
   public readonly aiEnabled: WritableSignal<boolean> = signal<boolean>(true);
 
-  // ===== COMPUTED SIGNALS =====
+  /** 
+   * Datos reactivos para el modal de victoria 
+   */
   public readonly victoryModalData = computed((): ModalData => {
     if (!this.showVictoryModal() || !this.gameOver()) {
       return { open: false, title: '', content: '' };
     }
-    
+
     const winner = this.winnerColor();
     let content = 'Partida en tablas';
-    
+
     if (winner === PieceColor.White) {
       content = '¡Ganan las blancas!';
     } else if (winner === PieceColor.Black) {
       content = '¡Ganan las negras!';
     }
-    
+
     return {
       open: true,
       title: '🏆 ¡Partida finalizada!',
@@ -64,37 +89,38 @@ export class ChessService {
     };
   });
 
-  public readonly isGameActive = computed(() => 
+  /**
+   * Indica si el juego está activo y se pueden hacer movimientos
+   */
+  public readonly isGameActive = computed(() =>
     this.gameInitialized() && !this.gameOver()
   );
 
-  // ===== ESTADO PRIVADO =====
+  /**
+   * Estado del tablero anterior
+   */
   private previousBoard: ChessSquare[][] = [];
   private aiMoveInProgress = false;
+  private aiMovesCache = new Map<string, Position[]>();
 
   constructor() {
-    // ===== EFFECTS =====
-    
-    // Effect para detectar cambios en el tablero y actualizar el estado del juego
+
     effect(() => {
       const currentBoard = this.board();
       if (!this.gameInitialized() || currentBoard.length === 0) return;
-      
-      // Evitar procesamiento innecesario si es la inicialización
+
       if (this.previousBoard.length === 0) {
-        this.previousBoard = this.deepCloneBoard(currentBoard);
+        this.previousBoard = deepCloneBoard(currentBoard);
         return;
       }
-      
-      // Detectar y procesar movimiento
-      if (this.hasBoardChanged(this.previousBoard, currentBoard)) {
+
+      if (hasBoardChanged(this.previousBoard, currentBoard)) {
         this.processMove(this.previousBoard, currentBoard);
-        this.previousBoard = this.deepCloneBoard(currentBoard);
+        this.previousBoard = deepCloneBoard(currentBoard);
         this.checkGameStatus();
       }
     });
 
-    // Effect optimizado para la IA
     effect(() => {
       if (this.shouldAiMove()) {
         this.scheduleAiMove();
@@ -102,76 +128,115 @@ export class ChessService {
     });
   }
 
-  // ===== MÉTODOS PÚBLICOS =====
-
+  /**
+   * Inicializa un nuevo juego de ajedrez
+   */
   initializeGame(): void {
     this.resetGameState();
-    const newBoard = this.createEmptyBoard();
+    const newBoard = createEmptyBoard();
     this.setupInitialPosition(newBoard);
     this.board.set(newBoard);
-    this.previousBoard = this.deepCloneBoard(newBoard);
+    this.previousBoard = deepCloneBoard(newBoard);
     this.finalizeGameInitialization();
   }
 
+  /**
+   * Reinicia el juego actual
+   */
   resetGame(): void {
     this.initializeGame();
   }
 
   /**
-   * Método público para ejecutar un movimiento con validación completa
+   * Ejecuta un movimiento en el tablero
+   * @param fromPos - Posición origen (ej: "e2")
+   * @param toPos - Posición destino (ej: "e4")
+   * @returns Resultado del movimiento con información detallada
    */
-  public executeMove(fromPos: string, toPos: string): boolean {
-    if (!this.isGameActive() || !this.isValidTurn(fromPos)) {
-      return false;
+  public makeMove(fromPos: Position, toPos: Position): MoveResult {
+    return this.attemptMove(fromPos, toPos);
+  }
+
+  /**
+   * Valida un movimiento sin ejecutarlo
+   * @param fromPos - Posición origen
+   * @param toPos - Posición destino
+   * @returns Resultado de la validación
+   */
+  public validateMove(fromPos: Position, toPos: Position): MoveResult {
+    if (!this.isGameActive()) {
+      return { success: false, error: 'Juego no activo' };
+    }
+
+    const turnValidation = this.validateTurn(fromPos);
+    if (!turnValidation.valid) {
+      return { success: false, error: turnValidation.error };
     }
 
     const board = this.board();
     if (!this.isValidMoveComplete(board, fromPos, toPos)) {
-      return false;
+      const piece = getPieceAtPosition(board, fromPos);
+      const pieceName = piece ? `${piece.type} ${piece.color}` : 'pieza';
+      return { success: false, error: `El ${pieceName} no puede moverse a esa posición` };
     }
 
-    return this.performMove(fromPos, toPos);
+    const targetPiece = getPieceAtPosition(board, toPos);
+    const moveType = targetPiece ? 'capture' : 'normal';
+
+    return {
+      success: true,
+      captured: targetPiece || undefined,
+      moveType
+    };
   }
 
-  // ===== MÉTODOS PRIVADOS =====
+  /**
+   * Ejecuta un movimiento después de validarlo
+   * @param fromPos - Posición origen
+   * @param toPos - Posición destino
+   * @returns Resultado del movimiento
+   */
+  private attemptMove(fromPos: Position, toPos: Position): MoveResult {
+    if (!this.isGameActive()) {
+      return { success: false, error: 'Juego no activo' };
+    }
+
+    const turnValidation = this.validateTurn(fromPos);
+    if (!turnValidation.valid) {
+      return { success: false, error: turnValidation.error };
+    }
+
+    const board = this.board();
+    if (!this.isValidMoveComplete(board, fromPos, toPos)) {
+      const piece = getPieceAtPosition(board, fromPos);
+      const pieceName = piece ? `${piece.type} ${piece.color}` : 'pieza';
+      return { success: false, error: `El ${pieceName} no puede moverse a esa posición` };
+    }
+
+    // Verificar si hay captura antes de ejecutar el movimiento
+    const targetPiece = getPieceAtPosition(board, toPos);
+    const moveResult = this.performMoveWithResult(fromPos, toPos, targetPiece);
+
+    return moveResult;
+  }
 
   /**
    * Optimizaciones y métodos auxiliares
    */
-  private deepCloneBoard(board: ChessSquare[][]): ChessSquare[][] {
-    return board.map(row => 
-      row.map(square => ({ 
-        ...square, 
-        piece: square.piece ? { ...square.piece } : null 
-      }))
-    );
-  }
-
-  private hasBoardChanged(previous: ChessSquare[][], current: ChessSquare[][]): boolean {
-    for (let row = 0; row < 8; row++) {
-      for (let col = 0; col < 8; col++) {
-        const prevPiece = previous[row]?.[col]?.piece;
-        const currPiece = current[row]?.[col]?.piece;
-        
-        if (!prevPiece && !currPiece) continue;
-        if (!prevPiece || !currPiece) return true;
-        if (prevPiece.id !== currPiece.id) return true;
-      }
-    }
-    return false;
-  }
-
   private shouldAiMove(): boolean {
-    return this.currentTurn() === PieceColor.Black && 
-           this.isGameActive() && 
-           this.gameInitialized() &&
-           this.aiEnabled() &&
-           !this.aiMoveInProgress;
+    return this.currentTurn() === PieceColor.Black &&
+      this.isGameActive() &&
+      this.gameInitialized() &&
+      this.aiEnabled() &&
+      !this.aiMoveInProgress;
   }
 
+  /**
+   * Programa el movimiento de la IA
+   */
   private scheduleAiMove(): void {
     if (this.aiMoveInProgress) return;
-    
+
     this.aiMoveInProgress = true;
     setTimeout(() => {
       this.makeAiMove();
@@ -179,6 +244,9 @@ export class ChessService {
     }, 1000);
   }
 
+  /**
+   * Reinicia el estado del juego
+   */
   private resetGameState(): void {
     this.isLoading.set(true);
     this.currentTurn.set(PieceColor.White);
@@ -189,27 +257,12 @@ export class ChessService {
     this.totalMovements.set(0);
     this.whiteCaptures.set(0);
     this.blackCaptures.set(0);
+    this.aiMovesCache.clear(); // Limpiar cache de movimientos
   }
 
-  private createEmptyBoard(): ChessSquare[][] {
-    const board: ChessSquare[][] = [];
-    for (let row = 0; row < 8; row++) {
-      const boardRow: ChessSquare[] = [];
-      for (let col = 0; col < 8; col++) {
-        const file = String.fromCharCode(97 + col);
-        const rank = 8 - row;
-        const position = `${file}${rank}`;
-        boardRow.push({
-          position,
-          color: (row + col) % 2 === 0 ? SquareColor.Light : SquareColor.Dark,
-          piece: null
-        });
-      }
-      board.push(boardRow);
-    }
-    return board;
-  }
-
+  /**
+   * Finaliza la inicialización del juego
+   */
   private finalizeGameInitialization(): void {
     this.isLoading.set(false);
     this.gameInitialized.set(true);
@@ -219,25 +272,54 @@ export class ChessService {
     }, 2000);
   }
 
-  private isValidTurn(fromPos: string): boolean {
-    const piece = this.getPieceAtPosition(this.board(), fromPos);
-    return piece !== null && piece.color === this.currentTurn();
+  /**
+   * Valida si es el turno del jugador correspondiente
+   * @param fromPos - Posición de la pieza a mover
+   * @returns Objeto con el resultado de la validación
+   */
+  private validateTurn(fromPos: Position): { valid: boolean; error?: string } {
+    const piece = getPieceAtPosition(this.board(), fromPos);
+
+    if (!piece) {
+      return { valid: false, error: 'No hay pieza en esa posición' };
+    }
+
+    if (piece.color !== this.currentTurn()) {
+      const turn = this.currentTurn() === PieceColor.White ? 'blancas' : 'negras';
+      return { valid: false, error: `Es el turno de las ${turn}` };
+    }
+
+    return { valid: true };
   }
 
-  private isValidMoveComplete(board: ChessSquare[][], fromPos: string, toPos: string): boolean {
-    const fromCoords = this.positionToCoordinates(fromPos);
-    const toCoords = this.positionToCoordinates(toPos);
-    const piece = this.getPieceAtPosition(board, fromPos);
-    
+  /**
+   * Verifica si un movimiento es válido en su totalidad
+   * @param board - Tablero actual
+   * @param fromPos - Posición de origen
+   * @param toPos - Posición de destino
+   * @returns Verdadero si el movimiento es válido, falso en caso contrario
+   */
+  private isValidMoveComplete(board: ChessSquare[][], fromPos: Position, toPos: Position): boolean {
+    const fromCoords = positionToCoordinates(fromPos);
+    const toCoords = positionToCoordinates(toPos);
+    const piece = getPieceAtPosition(board, fromPos);
+
     if (!piece) return false;
-    
+
     return this.isValidMoveByRules(board, piece, [fromCoords.row, fromCoords.col], [toCoords.row, toCoords.col]);
   }
 
+  /**
+   * Verifica si un movimiento es válido en su totalidad
+   * @param board - Tablero actual
+   * @param piece - Pieza a mover
+   * @param from - Posición de origen
+   * @param to - Posición de destino
+   * @returns Verdadero si el movimiento es válido, falso en caso contrario
+   */
   private isValidMoveByRules(board: ChessSquare[][], piece: ChessPiece, from: [number, number], to: [number, number]): boolean {
     const targetPiece = board[to[0]][to[1]].piece;
-    
-    // No puede capturar sus propias piezas
+
     if (targetPiece && targetPiece.color === piece.color) {
       return false;
     }
@@ -260,55 +342,89 @@ export class ChessService {
     }
   }
 
-  private performMove(fromPos: string, toPos: string): boolean {
+  /**
+   * Ejecuta un movimiento y retorna el resultado
+   * @param fromPos - Posición de origen
+   * @param toPos - Posición de destino
+   * @param capturedPiece - Pieza capturada (si la hay)
+   * @returns Resultado del movimiento
+   */
+  private performMoveWithResult(fromPos: Position, toPos: Position, capturedPiece?: ChessPiece | null): MoveResult {
     const board = this.board();
-    const newBoard = this.deepCloneBoard(board);
-    
-    const fromSquare = this.getSquareAtPosition(newBoard, fromPos);
-    const toSquare = this.getSquareAtPosition(newBoard, toPos);
+    const newBoard = deepCloneBoard(board);
 
-    if (!fromSquare?.piece || !toSquare) return false;
+    const fromSquare = getSquareAtPosition(newBoard, fromPos);
+    const toSquare = getSquareAtPosition(newBoard, toPos);
 
-    // Ejecutar el movimiento
+    if (!fromSquare?.piece || !toSquare) {
+      return { success: false, error: 'Casilla inválida' };
+    }
+
+    const targetPiece = capturedPiece !== undefined ? capturedPiece : toSquare.piece;
+
     toSquare.piece = { ...fromSquare.piece, position: toPos };
     fromSquare.piece = null;
-    
+
     this.board.set(newBoard);
-    return true;
+
+    const moveType = targetPiece ? 'capture' : 'normal';
+
+    return {
+      success: true,
+      captured: targetPiece || undefined,
+      moveType
+    };
   }
 
+  /**
+   * Procesa un movimiento detectado y actualiza el estado del juego
+   * @param previousBoard - Tablero anterior
+   * @param currentBoard - Tablero actual
+   */
   private processMove(previousBoard: ChessSquare[][], currentBoard: ChessSquare[][]): void {
     const moveData = this.detectMove(previousBoard, currentBoard);
-    
+
     if (moveData.movedPiece) {
       this.updateGameStateAfterMove(moveData);
     }
   }
 
   /**
-   * Detecta movimientos comparando tableros y devuelve datos estructurados
+   * Detecta movimientos comparando tableros de forma optimizada
+   * @param previousBoard - Tablero anterior
+   * @param currentBoard - Tablero actual
+   * @returns Datos del movimiento detectado
    */
   private detectMove(previousBoard: ChessSquare[][], currentBoard: ChessSquare[][]): MoveData {
     let sourcePos = '';
     let targetPos = '';
     let movedPiece: ChessPiece | null = null;
     let capturedPiece: ChessPiece | null = null;
+    let foundSource = false;
+    let foundTarget = false;
 
-    for (let row = 0; row < 8; row++) {
-      for (let col = 0; col < 8; col++) {
+    for (let row = 0; row < 8 && (!foundSource || !foundTarget); row++) {
+      for (let col = 0; col < 8 && (!foundSource || !foundTarget); col++) {
         const prevPiece = previousBoard[row]?.[col]?.piece;
         const currentPiece = currentBoard[row]?.[col]?.piece;
-        
-        if (prevPiece && !currentPiece) {
+
+        // Buscar casilla origen (pieza desapareció)
+        if (!foundSource && prevPiece && !currentPiece) {
           sourcePos = previousBoard[row][col].position;
           movedPiece = prevPiece;
+          foundSource = true;
         }
-        
-        if (!prevPiece && currentPiece) {
-          targetPos = currentBoard[row][col].position;
-        } else if (prevPiece && currentPiece && prevPiece.id !== currentPiece.id) {
-          targetPos = currentBoard[row][col].position;
-          capturedPiece = prevPiece;
+
+        // Buscar casilla destino (pieza apareció o cambió)
+        if (!foundTarget) {
+          if (!prevPiece && currentPiece) {
+            targetPos = currentBoard[row][col].position;
+            foundTarget = true;
+          } else if (prevPiece && currentPiece && prevPiece.id !== currentPiece.id) {
+            targetPos = currentBoard[row][col].position;
+            capturedPiece = prevPiece;
+            foundTarget = true;
+          }
         }
       }
     }
@@ -318,27 +434,31 @@ export class ChessService {
 
   /**
    * Actualiza el estado del juego después de un movimiento
+   * @param moveData - Datos del movimiento
    */
   private updateGameStateAfterMove(moveData: MoveData): void {
     const { sourcePos, targetPos, movedPiece, capturedPiece } = moveData;
-    
+
     if (!movedPiece || !sourcePos || !targetPos) return;
 
-    // Actualizar capturas
+    this.aiMovesCache.clear();
+
     if (capturedPiece) {
       this.updateCaptures(capturedPiece.color);
     }
 
-    // Cambiar turno
     const nextTurn = movedPiece.color === PieceColor.White ? PieceColor.Black : PieceColor.White;
     this.currentTurn.set(nextTurn);
 
-    // Actualizar contadores y historial
     this.totalMovements.update(v => v + 1);
-    const moveNotation = this.generateMoveNotation(movedPiece, sourcePos, targetPos, capturedPiece);
+    const moveNotation = generateMoveNotation(movedPiece, sourcePos, targetPos, capturedPiece);
     this.moveHistory.update(h => [...h, moveNotation]);
   }
 
+  /**
+   * Actualiza el contador de piezas capturadas
+   * @param capturedColor - Color de la pieza capturada
+   */
   private updateCaptures(capturedColor: PieceColor): void {
     if (capturedColor === PieceColor.White) {
       this.whiteCaptures.update(v => v + 1);
@@ -349,129 +469,68 @@ export class ChessService {
 
   /**
    * Configura la posición inicial de las piezas en el tablero
+   * @param board - Tablero a configurar
    */
   private setupInitialPosition(board: ChessSquare[][]): void {
-    const pieceOrder = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, PieceType.Queen, PieceType.King, PieceType.Bishop, PieceType.Knight, PieceType.Rook] as const;
-
+    // Configurar piezas blancas y negras en un solo bucle
     for (let col = 0; col < 8; col++) {
       const file = String.fromCharCode(97 + col);
-      this.placePiece(board, `${file}1`, { id: col + 1, type: pieceOrder[col], color: PieceColor.White, position: `${file}1` });
-      this.placePiece(board, `${file}2`, { id: 9 + col, type: PieceType.Pawn, color: PieceColor.White, position: `${file}2` });
-    }
 
-    for (let col = 0; col < 8; col++) {
-      const file = String.fromCharCode(97 + col);
-      this.placePiece(board, `${file}8`, { id: 17 + col, type: pieceOrder[col], color: PieceColor.Black, position: `${file}8` });
-      this.placePiece(board, `${file}7`, { id: 25 + col, type: PieceType.Pawn, color: PieceColor.Black, position: `${file}7` });
+
+      placePiece(board, `${file}1`, {
+        id: col + 1,
+        type: INITIAL_PIECE_ORDER[col],
+        color: PieceColor.White,
+        position: `${file}1`
+      });
+      placePiece(board, `${file}2`, {
+        id: 9 + col,
+        type: PieceType.Pawn,
+        color: PieceColor.White,
+        position: `${file}2`
+      });
+
+
+      placePiece(board, `${file}8`, {
+        id: 17 + col,
+        type: INITIAL_PIECE_ORDER[col],
+        color: PieceColor.Black,
+        position: `${file}8`
+      });
+      placePiece(board, `${file}7`, {
+        id: 25 + col,
+        type: PieceType.Pawn,
+        color: PieceColor.Black,
+        position: `${file}7`
+      });
     }
   }
 
-  private placePiece(board: ChessSquare[][], position: string, piece: ChessPiece): void {
-    const [file, rank] = position.split('');
-    const col = file.charCodeAt(0) - 97;
-    const row = 8 - parseInt(rank);
-    if (board[row] && board[row][col]) {
-      board[row][col].piece = piece;
-    }
-  }
-
+  /**
+   * Verifica el estado del juego
+   */
   private checkGameStatus(): void {
     const currentBoard = this.board();
-    let whiteKingExists = false;
-    let blackKingExists = false;
-    
-    for (const row of currentBoard) {
-      for (const square of row) {
-        if (square.piece?.type === 'king') {
-          if (square.piece.color === PieceColor.White) {
-            whiteKingExists = true;
-          } else {
-            blackKingExists = true;
-          }
-        }
-      }
-    }
-    
-    if (!whiteKingExists) {
-      this.gameOver.set(true);
-      this.winnerColor.set(PieceColor.Black);
-      setTimeout(() => {
-        this.showVictoryModal.set(true);
-      }, 100);
-    } else if (!blackKingExists) {
-      this.gameOver.set(true);
-      this.winnerColor.set(PieceColor.White);
-      setTimeout(() => {
-        this.showVictoryModal.set(true);
-      }, 100);
+    const kings = findKings(currentBoard);
+
+    if (!kings.white) {
+      this.endGame(PieceColor.Black);
+    } else if (!kings.black) {
+      this.endGame(PieceColor.White);
     }
   }
 
   /**
-   * Detecta movimientos comparando el tablero anterior con el actual y actualiza los signals
+   * Finaliza el juego
+   * @param winner - Color de la pieza ganadora
    */
-  private detectAndUpdateMove(previousBoard: ChessSquare[][], currentBoard: ChessSquare[][]): void {
-    let sourcePos = '';
-    let targetPos = '';
-    let movedPiece: ChessPiece | null = null;
-    let capturedPiece: ChessPiece | null = null;
-
-    // Encontrar la casilla que perdió una pieza (origen)
-    for (let row = 0; row < 8; row++) {
-      for (let col = 0; col < 8; col++) {
-        const prevPiece = previousBoard[row]?.[col]?.piece;
-        const currentPiece = currentBoard[row]?.[col]?.piece;
-        
-        // Se perdió una pieza en esta casilla
-        if (prevPiece && !currentPiece) {
-          sourcePos = previousBoard[row][col].position;
-          movedPiece = prevPiece;
-        }
-        
-        // Se ganó una pieza en esta casilla o cambió la pieza
-        if (!prevPiece && currentPiece) {
-          targetPos = currentBoard[row][col].position;
-        } else if (prevPiece && currentPiece && prevPiece.id !== currentPiece.id) {
-          targetPos = currentBoard[row][col].position;
-          capturedPiece = prevPiece;
-        }
-      }
-    }
-
-    // Si detectamos un movimiento válido, actualizamos los signals
-    if (sourcePos && targetPos && movedPiece) {
-      // Verificar si hay captura
-      if (capturedPiece) {
-        if (capturedPiece.color === PieceColor.White) {
-          this.whiteCaptures.update(v => v + 1);
-        } else {
-          this.blackCaptures.update(v => v + 1);
-        }
-      }
-
-      // Actualizar turno basado en el color de la pieza que se movió
-      const nextTurn = movedPiece.color === PieceColor.White ? PieceColor.Black : PieceColor.White;
-      this.currentTurn.set(nextTurn);
-
-      // Actualizar movimientos
-      this.totalMovements.update(v => v + 1);
-
-      // Actualizar historial
-      const moveNotation = this.generateMoveNotation(movedPiece, sourcePos, targetPos, capturedPiece);
-      this.moveHistory.update(h => [...h, moveNotation]);
-    }
+  private endGame(winner: PieceColor): void {
+    this.gameOver.set(true);
+    this.winnerColor.set(winner);
+    setTimeout(() => {
+      this.showVictoryModal.set(true);
+    }, 100);
   }
-
-  /**
-   * Genera la notación algebraica de un movimiento usando constantes centralizadas
-   */
-  private generateMoveNotation(piece: ChessPiece, sourcePos: Position, targetPos: Position, capturedPiece: ChessPiece | null): string {
-    const symbol = PIECE_SYMBOLS[piece.type];
-    const capture = capturedPiece ? 'x' : '';
-    return `${symbol}${sourcePos}${capture}${targetPos}`;
-  }
-
-  // ===== MÉTODOS DE IA MEJORADOS =====
 
   /**
    * Ejecuta un movimiento de la IA usando las reglas existentes
@@ -481,20 +540,22 @@ export class ChessService {
     const bestMove = this.findBestMoveForAi(board);
 
     if (bestMove) {
-      this.executeMove(bestMove.from, bestMove.to);
+      this.makeMove(bestMove.from, bestMove.to);
     }
   }
 
   /**
    * Encuentra el mejor movimiento para la IA usando las reglas de movimiento
+   * @param board - Tablero actual
+   * @returns Mejor movimiento encontrado o null si no hay movimientos válidos
    */
   private findBestMoveForAi(board: ChessSquare[][]): AiMove | null {
-    const blackPieces = this.getAllPiecesForColor(board, PieceColor.Black);
+    const blackPieces = getAllPiecesForColor(board, PieceColor.Black);
     const possibleMoves: AiMove[] = [];
 
     for (const piecePos of blackPieces) {
       const validMoves = this.getValidMovesForPieceWithRules(board, piecePos);
-      
+
       for (const targetPos of validMoves) {
         const score = this.evaluateMove(board, piecePos, targetPos);
         possibleMoves.push({ from: piecePos, to: targetPos, score });
@@ -503,117 +564,101 @@ export class ChessService {
 
     if (possibleMoves.length === 0) return null;
 
-    // Ordenar por score y tomar el mejor
     possibleMoves.sort((a, b) => b.score - a.score);
     return possibleMoves[0];
   }
 
   /**
-   * Obtiene movimientos válidos para una pieza usando las reglas existentes
+   * Obtiene movimientos válidos para una pieza usando cache y las reglas existentes
+   * @param board - Tablero actual
+   * @param position - Posición de la pieza
+   * @returns Movimientos válidos para la pieza
    */
   private getValidMovesForPieceWithRules(board: ChessSquare[][], position: Position): Position[] {
+    const boardHash = this.generateBoardHash(board);
+    const cacheKey = `${position}-${boardHash}`;
+
+    if (this.aiMovesCache.has(cacheKey)) {
+      return this.aiMovesCache.get(cacheKey)!;
+    }
+
     const validMoves: Position[] = [];
-    const piece = this.getPieceAtPosition(board, position);
-    
+    const piece = getPieceAtPosition(board, position);
+
     if (!piece) return validMoves;
 
-    const fromCoords = this.positionToCoordinates(position);
+    const fromCoords = positionToCoordinates(position);
 
-    // Revisar todas las casillas del tablero
     for (const row of board) {
       for (const square of row) {
         if (position === square.position) continue;
-        
-        const toCoords = this.positionToCoordinates(square.position);
-        
+
+        const toCoords = positionToCoordinates(square.position);
+
         if (this.isValidMoveByRules(board, piece, [fromCoords.row, fromCoords.col], [toCoords.row, toCoords.col])) {
           validMoves.push(square.position);
         }
       }
     }
-    
+
+    if (this.aiMovesCache.size < 100) {
+      this.aiMovesCache.set(cacheKey, validMoves);
+    }
+
     return validMoves;
   }
 
   /**
-   * Evalúa la calidad de un movimiento con mejor heurística usando constantes centralizadas
+   * Genera un hash simple del tablero para la cache
+   * @param board - Tablero actual
+   * @returns Hash del tablero
+   */
+  private generateBoardHash(board: ChessSquare[][]): string {
+    let hash = '';
+    for (const row of board) {
+      for (const square of row) {
+        hash += square.piece ? `${square.piece.type}${square.piece.color}${square.position}` : '0';
+      }
+    }
+    return hash.slice(0, 50);
+  }
+
+  /**
+   * Evalúa la calidad de un movimiento con heurísticas mejoradas
+   * @param board - Tablero actual
+   * @param from - Posición de origen
+   * @param to - Posición de destino
+   * @returns Puntuación del movimiento
    */
   private evaluateMove(board: ChessSquare[][], from: Position, to: Position): number {
     let score = 0;
-    
-    const targetPiece = this.getPieceAtPosition(board, to);
-    
-    // Bonificación por capturar piezas usando valores centralizados
+
+    const movingPiece = getPieceAtPosition(board, from);
+    const targetPiece = getPieceAtPosition(board, to);
+
+    if (!movingPiece) return score;
+
     if (targetPiece) {
-      score += PIECE_VALUES[targetPiece.type] || 0;
+      score += getPieceValue(targetPiece.type) * 10;
     }
-    
-    // Bonificación por posición central
-    const toCoords = this.positionToCoordinates(to);
-    const centerBonus = this.getCenterPositionBonus(toCoords);
-    score += centerBonus;
-    
-    // Aleatoriedad controlada para variabilidad
-    score += Math.random() * 0.1;
-    
+
+    const toCoords = positionToCoordinates(to);
+    if (movingPiece.type !== PieceType.King) {
+      score += getCenterPositionBonus(toCoords) * 2;
+    }
+
+    if (movingPiece.type === PieceType.King) {
+      score -= 2;
+    }
+
+    const fromCoords = positionToCoordinates(from);
+    if ((movingPiece.color === PieceColor.Black && fromCoords.row <= 1) ||
+      (movingPiece.color === PieceColor.White && fromCoords.row >= 6)) {
+      score += 1;
+    }
+
+    score += Math.random() * 0.5;
+
     return score;
-  }
-
-  private getCenterPositionBonus(coords: Coordinates): number {
-    const centerDistance = Math.abs(3.5 - coords.row) + Math.abs(3.5 - coords.col);
-    return Math.max(0, 3 - centerDistance * 0.1);
-  }
-
-  /**
-   * Obtiene todas las piezas de un color específico
-   */
-  private getAllPiecesForColor(board: ChessSquare[][], color: PieceColor): Position[] {
-    const pieces: Position[] = [];
-    
-    for (const row of board) {
-      for (const square of row) {
-        if (square.piece && square.piece.color === color) {
-          pieces.push(square.position);
-        }
-      }
-    }
-    
-    return pieces;
-  }
-
-  /**
-   * Convierte coordenadas de fila/columna a posición de ajedrez
-   */
-  private coordinatesToPosition(row: number, col: number): Position {
-    const file = String.fromCharCode(97 + col);
-    const rank = 8 - row;
-    return `${file}${rank}`;
-  }
-
-  // ===== MÉTODOS UTILITARIOS =====
-  
-  /**
-   * Utilidades auxiliares optimizadas
-   */
-  private positionToCoordinates(position: Position): Coordinates {
-    const file = position.charCodeAt(0) - 97;
-    const rank = parseInt(position.charAt(1)) - 1;
-    return { row: 7 - rank, col: file };
-  }
-
-  private getPieceAtPosition(board: ChessSquare[][], position: Position): ChessPiece | null {
-    const square = this.getSquareAtPosition(board, position);
-    return square ? square.piece : null;
-  }
-
-  private getSquareAtPosition(board: ChessSquare[][], position: Position): ChessSquare | null {
-    for (const row of board) {
-      for (const square of row) {
-        if (square.position === position) {
-          return square;
-        }
-      }
-    }
-    return null;
   }
 }

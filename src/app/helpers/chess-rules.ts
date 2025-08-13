@@ -1,25 +1,49 @@
-import { ChessSquare, ChessPiece, PieceType } from './interfaces';
+import { ChessSquare, ChessPiece, PieceType, PieceColor } from './interfaces';
+
+/**
+ * Valida si las coordenadas están dentro del tablero
+ */
+function isValidCoordinates(row: number, col: number): boolean {
+  return row >= 0 && row < 8 && col >= 0 && col < 8;
+}
 
 export function isValidPawnMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
-  // Implementación básica: solo avance de 1 casilla hacia adelante
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
-  const direction = piece.color === 'white' ? -1 : 1;
-  // Movimiento simple
+  
+  // Validar límites del tablero
+  if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  
+  const direction = piece.color === PieceColor.White ? -1 : 1;
+  const startingRow = piece.color === PieceColor.White ? 6 : 1;
+  
+  // Movimiento simple de 1 casilla
   if (srcCol === tgtCol && tgtRow - srcRow === direction && !board[tgtRow][tgtCol].piece) {
     return true;
   }
+  
+  // Movimiento inicial de 2 casillas
+  if (srcCol === tgtCol && srcRow === startingRow && tgtRow - srcRow === direction * 2 && 
+      !board[tgtRow][tgtCol].piece && !board[srcRow + direction][srcCol].piece) {
+    return true;
+  }
+  
   // Captura diagonal
   if (Math.abs(srcCol - tgtCol) === 1 && tgtRow - srcRow === direction && board[tgtRow][tgtCol].piece) {
     return true;
   }
+  
   return false;
 }
 
 export function isValidRookMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
-  // Movimiento horizontal o vertical sin piezas en el camino
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
+  
+  // Validar límites del tablero
+  if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  
+  // Debe moverse horizontal o verticalmente
   if (srcRow !== tgtRow && srcCol !== tgtCol) return false;
   // Verificar que no haya piezas en el camino
   if (srcRow === tgtRow) {
@@ -38,10 +62,13 @@ export function isValidRookMove(board: ChessSquare[][], piece: ChessPiece, sourc
   return true;
 }
 
-// Puedes agregar funciones para Knight, Bishop, Queen, King...
 export function isValidKnightMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
+  
+  // Validar límites del tablero
+  if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  
   const rowDiff = Math.abs(srcRow - tgtRow);
   const colDiff = Math.abs(srcCol - tgtCol);
   // Movimiento en L: 2x1 o 1x2
@@ -51,8 +78,13 @@ export function isValidKnightMove(board: ChessSquare[][], piece: ChessPiece, sou
 export function isValidBishopMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
+  
+  // Validar límites del tablero
+  if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  
   const rowDiff = Math.abs(srcRow - tgtRow);
   const colDiff = Math.abs(srcCol - tgtCol);
+  // Debe moverse diagonalmente
   if (rowDiff !== colDiff) return false;
   // Verificar que no haya piezas en el camino
   const rowStep = tgtRow > srcRow ? 1 : -1;
@@ -71,8 +103,12 @@ export function isValidQueenMove(board: ChessSquare[][], piece: ChessPiece, sour
 export function isValidKingMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
+  
+  // Validar límites del tablero
+  if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  
   const rowDiff = Math.abs(srcRow - tgtRow);
   const colDiff = Math.abs(srcCol - tgtCol);
   // Movimiento de una casilla en cualquier dirección
-  return rowDiff <= 1 && colDiff <= 1;
+  return rowDiff <= 1 && colDiff <= 1 && (rowDiff > 0 || colDiff > 0);
 }

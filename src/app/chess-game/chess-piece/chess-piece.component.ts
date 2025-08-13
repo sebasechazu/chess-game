@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ChessPiece } from '../../helpers/interfaces';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
+/**
+ * Componente de presentación para una pieza de ajedrez individual
+ * Maneja la visualización y animaciones de las piezas
+ */
 @Component({
   selector: 'app-chess-piece',
   templateUrl: './chess-piece.component.html',
@@ -27,26 +31,37 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 })
 export class ChessPieceComponent {
 
- @Input({ required: true }) piece!: ChessPiece;
- @Input() isMoving: boolean = false;
+  @Input({ required: true }) piece!: ChessPiece;
+  @Input() isMoving: boolean = false;
   
   private readonly basePath = 'assets/img/chess/';
   private readonly fallbackImage = 'assets/img/chess/fallback-piece.svg';
 
+  /** Ruta de la imagen de la pieza */
   protected readonly imageSrc = computed(() => {
     if (!this.piece) return this.fallbackImage;
     return `${this.basePath}${this.piece.color}-${this.piece.type}.svg`;
   });
 
+  /** Texto alternativo para accesibilidad */
   protected readonly altText = computed(() => {
     if (!this.piece) return '';
     return `${this.capitalizeFirst(this.piece.type)} ${this.piece.color}`;
   });
 
+  /**
+   * Capitaliza la primera letra de un texto
+   * @param text - Texto a capitalizar
+   * @returns Texto con la primera letra en mayúscula
+   */
   private capitalizeFirst(text: string): string {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
+  /**
+   * Maneja errores de carga de imagen usando fallback
+   * @param event - Evento de error de la imagen
+   */
   protected onImageError(event: Event): void {
     const imgElement = event.target as HTMLImageElement;
     if (imgElement.src !== this.fallbackImage) {
@@ -55,6 +70,10 @@ export class ChessPieceComponent {
     }
   }
 
+  /**
+   * Determina el estado de animación de la pieza
+   * @returns Estado de la animación ('moving' o 'idle')
+   */
   getMoveState(): string {
     return this.isMoving ? 'moving' : 'idle';
   }

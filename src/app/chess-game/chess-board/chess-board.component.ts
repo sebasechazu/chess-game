@@ -1,11 +1,14 @@
 import { Component, input, output } from '@angular/core';
-import { ChessSquare, SquareColor, PieceColor, ChessPiece, PieceType } from '../../helpers/interfaces';
+import { ChessSquare, SquareColor, PieceColor } from '../../helpers/interfaces';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NgClass } from '@angular/common';
 import { ChessPieceComponent } from "../chess-piece/chess-piece.component";
-import { isValidPawnMove, isValidRookMove, isValidKnightMove, isValidBishopMove, isValidQueenMove, isValidKingMove } from '../../helpers/chess-move-rules';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
+/**
+ * Componente de presentación del tablero de ajedrez
+ * Maneja la visualización y las interacciones drag & drop
+ */
 @Component({
   selector: 'app-chess-board',
   templateUrl: './chess-board.component.html',
@@ -31,24 +34,27 @@ export class ChessBoardComponent {
   readonly rows = [8, 7, 6, 5, 4, 3, 2, 1];
   readonly SquareColor = SquareColor; 
   
-  // Inputs del componente padre
   board = input<ChessSquare[][]>([]);
   currentTurn = input<PieceColor>(PieceColor.White); 
   gameOver = input<boolean>(false);
   
-  // Output para emitir movimientos válidos al componente padre
   moveAttempt = output<{ from: string; to: string }>();
 
   public hoveredSquare: string | null = null;
   public dragging: string | null = null;
   public lastMoveValid: boolean | null = null;
 
+  /**
+   * Maneja el evento drop de una pieza en el tablero
+   * @param event - Evento de drag and drop del CDK
+   */
   onPieceDrop(event: CdkDragDrop<ChessSquare>) {
     this.dragging = null;
     this.hoveredSquare = null;
     
     const sourceSquare = event.previousContainer.data;
     const targetSquare = event.container.data;
+    
     if (!sourceSquare || !targetSquare) {
       this.lastMoveValid = null;
       return;
@@ -58,82 +64,54 @@ export class ChessBoardComponent {
     const targetPosition = targetSquare.position;
     const movingPiece = sourceSquare.piece;
     
-    if (!movingPiece) {
+    if (!movingPiece || sourcePosition === targetPosition) {
       this.lastMoveValid = null;
       return;
     }
 
-    if (sourcePosition === targetPosition) {
-      this.lastMoveValid = null;
-      return;
-    }
-
-    const boardSnapshot = this.board();
-    const isValid = this.isLegalMove(boardSnapshot, sourcePosition, targetPosition);
-    this.lastMoveValid = isValid;
-
-    if (isValid) {
-      // Emitir el movimiento al componente padre para que lo procese
-      this.moveAttempt.emit({ from: sourcePosition, to: targetPosition });
-    }
-
+    this.moveAttempt.emit({ from: sourcePosition, to: targetPosition });
+    this.lastMoveValid = true;
+    
     setTimeout(() => {
       this.lastMoveValid = null;
     }, 1000);
   }
 
-  isLegalMove(board: ChessSquare[][], sourcePos: string, targetPos: string): boolean {
-    const [sourceFile, sourceRank] = sourcePos.split('');
-    const sourceCol = sourceFile.charCodeAt(0) - 97;
-    const sourceRow = 8 - parseInt(sourceRank);
-    const [targetFile, targetRank] = targetPos.split('');
-    const targetCol = targetFile.charCodeAt(0) - 97;
-    const targetRow = 8 - parseInt(targetRank);
-    const piece = board[sourceRow][sourceCol].piece;
-    const targetSquare = board[targetRow][targetCol];
-    if (!piece) return false;
-    if (targetSquare.piece && targetSquare.piece.color === piece.color) {
-      return false;
-    }
-    switch (piece.type) {
-      case PieceType.Pawn:
-        return isValidPawnMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
-      case PieceType.Rook:
-        return isValidRookMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
-      case PieceType.Knight:
-        return isValidKnightMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
-      case PieceType.Bishop:
-        return isValidBishopMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
-      case PieceType.Queen:
-        return isValidQueenMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
-      case PieceType.King:
-        return isValidKingMove(board, piece, [sourceRow, sourceCol], [targetRow, targetCol]);
-      default:
-        return false;
-    }
-  }
-
+  /**
+   * Inicia el arrastre de una pieza
+   * @param square - Casilla que contiene la pieza a arrastrar
+   */
   onDragStarted(square: ChessSquare) {
     this.dragging = square.position;
     this.lastMoveValid = null;
     this.hoveredSquare = null;
   }
 
+  /**
+   * Finaliza el arrastre de una pieza
+   */
   onDragEnded() {
-
     if (this.lastMoveValid === null) {
       this.dragging = null;
       this.hoveredSquare = null;
     }
   }
 
+  /**
+   * Maneja cuando una pieza entra en hover sobre una casilla
+   * @param square - Casilla sobre la que se está haciendo hover
+   */
   onSquareDragEnter(square: ChessSquare) {
     if (!this.dragging) return;
+    
     this.hoveredSquare = square.position;
-    const boardSnapshot = this.board();
-    this.lastMoveValid = this.isLegalMove(boardSnapshot, this.dragging, square.position);
+    this.lastMoveValid = true;
   }
 
+  /**
+   * Maneja cuando una pieza sale del hover de una casilla
+   * @param square - Casilla de la que se sale el hover
+   */
   onSquareDragLeave(square: ChessSquare) {
     if (this.hoveredSquare === square.position) {
       this.hoveredSquare = null;

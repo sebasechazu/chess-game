@@ -15,16 +15,16 @@
       <div class="text-sm font-bold mb-1" [class.text-lg]="isVertical" [class.mb-3]="isVertical">
         Turno Actual
       </div>
-      <div [class.text-white]="currentTurn === 'white'" 
-           [class.text-black]="currentTurn === 'black'"
-           [class.bg-gray-800]="currentTurn === 'white'" 
-           [class.bg-gray-200]="currentTurn === 'black'"
+      <div [class.text-white]="currentTurn === PieceColor.White" 
+           [class.text-black]="currentTurn === PieceColor.Black"
+           [class.bg-gray-800]="currentTurn === PieceColor.White" 
+           [class.bg-gray-200]="currentTurn === PieceColor.Black"
            class="py-1 px-3 rounded-md inline-block text-sm font-semibold"
            [class.py-2]="isVertical"
            [class.px-4]="isVertical"
            [class.text-base]="isVertical"
            [class.rounded-lg]="isVertical">
-        {{ currentTurn === 'white' ? 'Blancas' : 'Negras' }}
+        {{ currentTurn === PieceColor.White ? 'Blancas' : 'Negras' }}
       </div>
     </div>
 
