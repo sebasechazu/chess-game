@@ -1,5 +1,12 @@
-// ===== ENUMS =====
 
+/**
+ * Interfaces, tipos y enums para el juego de ajedrez
+ * Contiene todas las definiciones de tipos utilizadas en la aplicación
+ */
+
+/**
+ * Tipos de piezas de ajedrez
+ */
 export enum PieceType {
   King = 'king',
   Queen = 'queen',
@@ -9,18 +16,25 @@ export enum PieceType {
   Pawn = 'pawn'
 }
 
+/**
+ * Colores de las piezas de ajedrez
+ */
 export enum PieceColor {
   White = 'white',
   Black = 'black'
 }
 
+/**
+ * Colores de las casillas del tablero
+ */
 export enum SquareColor {
   Light = 'light',
   Dark = 'dark'
 }
 
-// ===== INTERFACES PRINCIPALES =====
-
+/**
+ * Representa una pieza de ajedrez
+ */
 export interface ChessPiece {
   id: number;
   type: PieceType;
@@ -30,14 +44,18 @@ export interface ChessPiece {
   hasMoved?: boolean;
 }
 
+/**
+ * Representa una casilla del tablero de ajedrez
+ */
 export interface ChessSquare {
   position: string;
   color: SquareColor;
   piece: ChessPiece | null;
 }
 
-// ===== INTERFACES DEL SERVICIO =====
-
+/**
+ * Resultado de un movimiento de ajedrez
+ */
 export interface MoveResult {
   success: boolean;
   captured?: ChessPiece;
@@ -45,12 +63,18 @@ export interface MoveResult {
   moveType?: 'normal' | 'capture' | 'castling' | 'enPassant' | 'promotion';
 }
 
+/**
+ * Movimiento generado por la IA
+ */
 export interface AiMove {
   from: string;
   to: string;
   score: number;
 }
 
+/**
+ * Datos de un movimiento realizado
+ */
 export interface MoveData {
   sourcePos: string;
   targetPos: string;
@@ -58,14 +82,18 @@ export interface MoveData {
   capturedPiece: ChessPiece | null;
 }
 
-// ===== INTERFACES DE LA UI =====
-
+/**
+ * Datos para el modal de la aplicación
+ */
 export interface ModalData {
   open: boolean;
   title: string;
   content: string;
 }
 
+/**
+ * Estadísticas del juego actual
+ */
 export interface GameStats {
   totalMovements: number;
   whiteCaptures: number;
@@ -73,6 +101,9 @@ export interface GameStats {
   moveHistory: string[];
 }
 
+/**
+ * Estado actual del juego
+ */
 export interface GameState {
   currentTurn: PieceColor;
   gameOver: boolean;
@@ -84,14 +115,16 @@ export interface GameState {
   aiEnabled: boolean;
 }
 
-// ===== TYPES UTILITARIOS =====
-
-export type Position = string; // e.g., "a1", "h8"
+/**
+ * Tipos auxiliares
+ */
+export type Position = string;
 export type Coordinates = { row: number; col: number };
 export type WinnerType = PieceColor | 'draw' | null;
 
-// ===== CONSTANTES =====
-
+/**
+ * Valores numéricos de las piezas para evaluación
+ */
 export const PIECE_VALUES = {
   [PieceType.Pawn]: 1,
   [PieceType.Knight]: 3,
@@ -101,6 +134,9 @@ export const PIECE_VALUES = {
   [PieceType.King]: 100
 } as const;
 
+/**
+ * Símbolos de notación algebraica para las piezas
+ */
 export const PIECE_SYMBOLS = {
   [PieceType.King]: 'K',
   [PieceType.Queen]: 'Q',

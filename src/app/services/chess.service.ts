@@ -164,6 +164,27 @@ export class ChessService {
    * @returns Resultado de la validación
    */
   public validateMove(fromPos: Position, toPos: Position): MoveResult {
+    return this.validateMoveInternal(fromPos, toPos, false);
+  }
+
+  /**
+   * Ejecuta un movimiento después de validarlo
+   * @param fromPos - Posición origen
+   * @param toPos - Posición destino
+   * @returns Resultado del movimiento
+   */
+  private attemptMove(fromPos: Position, toPos: Position): MoveResult {
+    return this.validateMoveInternal(fromPos, toPos, true);
+  }
+
+  /**
+   * Lógica interna para validar y opcionalmente ejecutar un movimiento
+   * @param fromPos - Posición origen
+   * @param toPos - Posición destino
+   * @param execute - Si true, ejecuta el movimiento; si false, solo valida
+   * @returns Resultado del movimiento o validación
+   */
+  private validateMoveInternal(fromPos: Position, toPos: Position, execute: boolean): MoveResult {
     if (!this.isGameActive()) {
       return { success: false, error: 'Juego no activo' };
     }
@@ -183,41 +204,16 @@ export class ChessService {
     const targetPiece = getPieceAtPosition(board, toPos);
     const moveType = targetPiece ? 'capture' : 'normal';
 
+    if (execute) {
+      const moveResult = this.performMoveWithResult(fromPos, toPos, targetPiece);
+      return moveResult;
+    }
+
     return {
       success: true,
       captured: targetPiece || undefined,
       moveType
     };
-  }
-
-  /**
-   * Ejecuta un movimiento después de validarlo
-   * @param fromPos - Posición origen
-   * @param toPos - Posición destino
-   * @returns Resultado del movimiento
-   */
-  private attemptMove(fromPos: Position, toPos: Position): MoveResult {
-    if (!this.isGameActive()) {
-      return { success: false, error: 'Juego no activo' };
-    }
-
-    const turnValidation = this.validateTurn(fromPos);
-    if (!turnValidation.valid) {
-      return { success: false, error: turnValidation.error };
-    }
-
-    const board = this.board();
-    if (!this.isValidMoveComplete(board, fromPos, toPos)) {
-      const piece = getPieceAtPosition(board, fromPos);
-      const pieceName = piece ? `${piece.type} ${piece.color}` : 'pieza';
-      return { success: false, error: `El ${pieceName} no puede moverse a esa posición` };
-    }
-
-    // Verificar si hay captura antes de ejecutar el movimiento
-    const targetPiece = getPieceAtPosition(board, toPos);
-    const moveResult = this.performMoveWithResult(fromPos, toPos, targetPiece);
-
-    return moveResult;
   }
 
   /**
@@ -257,7 +253,9 @@ export class ChessService {
     this.totalMovements.set(0);
     this.whiteCaptures.set(0);
     this.blackCaptures.set(0);
-    this.aiMovesCache.clear(); // Limpiar cache de movimientos
+    this.aiMovesCache.clear();
+    this.aiMoveInProgress = false;
+    this.previousBoard = [];
   }
 
   /**
@@ -310,16 +308,24 @@ export class ChessService {
   }
 
   /**
-   * Verifica si un movimiento es válido en su totalidad
+   * Verifica si un movimiento es válido aplicando las reglas específicas de cada pieza
    * @param board - Tablero actual
    * @param piece - Pieza a mover
-   * @param from - Posición de origen
-   * @param to - Posición de destino
-   * @returns Verdadero si el movimiento es válido, falso en caso contrario
+   * @param from - Coordenadas de origen [fila, columna]
+   * @param to - Coordenadas de destino [fila, columna]
+   * @returns Verdadero si el movimiento cumple las reglas de la pieza, falso en caso contrario
    */
   private isValidMoveByRules(board: ChessSquare[][], piece: ChessPiece, from: [number, number], to: [number, number]): boolean {
-    const targetPiece = board[to[0]][to[1]].piece;
+    const [toRow, toCol] = to;
+    
+    // Validar límites del tablero
+    if (toRow < 0 || toRow >= 8 || toCol < 0 || toCol >= 8) {
+      return false;
+    }
+    
+    const targetPiece = board[toRow][toCol].piece;
 
+    // No se puede capturar una pieza del mismo color
     if (targetPiece && targetPiece.color === piece.color) {
       return false;
     }
@@ -356,15 +362,22 @@ export class ChessService {
     const fromSquare = getSquareAtPosition(newBoard, fromPos);
     const toSquare = getSquareAtPosition(newBoard, toPos);
 
-    if (!fromSquare?.piece || !toSquare) {
-      return { success: false, error: 'Casilla inválida' };
+    if (!fromSquare || !toSquare) {
+      return { success: false, error: 'Posición inválida en el tablero' };
     }
 
+    if (!fromSquare.piece) {
+      return { success: false, error: 'No hay pieza en la posición de origen' };
+    }
+
+    // Usar la pieza capturada pasada como parámetro, o la pieza en la casilla destino
     const targetPiece = capturedPiece !== undefined ? capturedPiece : toSquare.piece;
 
+    // Actualizar la posición de la pieza movida
     toSquare.piece = { ...fromSquare.piece, position: toPos };
     fromSquare.piece = null;
 
+    // Aplicar el cambio al tablero
     this.board.set(newBoard);
 
     const moveType = targetPiece ? 'capture' : 'normal';
@@ -476,7 +489,7 @@ export class ChessService {
     for (let col = 0; col < 8; col++) {
       const file = String.fromCharCode(97 + col);
 
-
+      // Piezas blancas
       placePiece(board, `${file}1`, {
         id: col + 1,
         type: INITIAL_PIECE_ORDER[col],
@@ -490,7 +503,7 @@ export class ChessService {
         position: `${file}2`
       });
 
-
+      // Piezas negras
       placePiece(board, `${file}8`, {
         id: 17 + col,
         type: INITIAL_PIECE_ORDER[col],

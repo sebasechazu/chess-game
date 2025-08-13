@@ -1,34 +1,38 @@
+/**
+ * Reglas de movimiento específicas para cada pieza de ajedrez
+ * Contiene las funciones de validación para todos los tipos de piezas
+ */
+
 import { ChessSquare, ChessPiece, PieceType, PieceColor } from './interfaces';
+import { isValidCoordinates } from './chess-utils';
 
 /**
- * Valida si las coordenadas están dentro del tablero
+ * Verifica si un movimiento de peón es válido
+ * @param board - Tablero actual
+ * @param piece - Pieza a mover
+ * @param source - Coordenadas de origen [fila, columna]
+ * @param target - Coordenadas de destino [fila, columna]
+ * @returns Verdadero si el movimiento es válido, falso en caso contrario
  */
-function isValidCoordinates(row: number, col: number): boolean {
-  return row >= 0 && row < 8 && col >= 0 && col < 8;
-}
-
 export function isValidPawnMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
   
-  // Validar límites del tablero
   if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  if (srcRow === tgtRow && srcCol === tgtCol) return false;
   
   const direction = piece.color === PieceColor.White ? -1 : 1;
   const startingRow = piece.color === PieceColor.White ? 6 : 1;
   
-  // Movimiento simple de 1 casilla
   if (srcCol === tgtCol && tgtRow - srcRow === direction && !board[tgtRow][tgtCol].piece) {
     return true;
   }
   
-  // Movimiento inicial de 2 casillas
   if (srcCol === tgtCol && srcRow === startingRow && tgtRow - srcRow === direction * 2 && 
       !board[tgtRow][tgtCol].piece && !board[srcRow + direction][srcCol].piece) {
     return true;
   }
   
-  // Captura diagonal
   if (Math.abs(srcCol - tgtCol) === 1 && tgtRow - srcRow === direction && board[tgtRow][tgtCol].piece) {
     return true;
   }
@@ -36,16 +40,22 @@ export function isValidPawnMove(board: ChessSquare[][], piece: ChessPiece, sourc
   return false;
 }
 
-export function isValidRookMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
+/**
+ * Verifica si un movimiento de torre es válido
+ * @param board - Tablero actual
+ * @param piece - Pieza a mover
+ * @param source - Coordenadas de origen [fila, columna]
+ * @param target - Coordenadas de destino [fila, columna]
+ * @returns Verdadero si el movimiento es válido, falso en caso contrario
+ */
+export function isValidRookMove(board: ChessSquare[][], _piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
   
-  // Validar límites del tablero
   if (!isValidCoordinates(tgtRow, tgtCol)) return false;
-  
-  // Debe moverse horizontal o verticalmente
+  if (srcRow === tgtRow && srcCol === tgtCol) return false;
   if (srcRow !== tgtRow && srcCol !== tgtCol) return false;
-  // Verificar que no haya piezas en el camino
+
   if (srcRow === tgtRow) {
     const min = Math.min(srcCol, tgtCol);
     const max = Math.max(srcCol, tgtCol);
@@ -62,31 +72,47 @@ export function isValidRookMove(board: ChessSquare[][], piece: ChessPiece, sourc
   return true;
 }
 
-export function isValidKnightMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
+/**
+ * Verifica si un movimiento de caballo es válido
+ * @param board - Tablero actual
+ * @param piece - Pieza a mover
+ * @param source - Coordenadas de origen [fila, columna]
+ * @param target - Coordenadas de destino [fila, columna]
+ * @returns Verdadero si el movimiento es válido, falso en caso contrario
+ */
+export function isValidKnightMove(_board: ChessSquare[][], _piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
-  
-  // Validar límites del tablero
+
   if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  if (srcRow === tgtRow && srcCol === tgtCol) return false;
   
   const rowDiff = Math.abs(srcRow - tgtRow);
   const colDiff = Math.abs(srcCol - tgtCol);
-  // Movimiento en L: 2x1 o 1x2
+
   return (rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2);
 }
 
-export function isValidBishopMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
+/**
+ * Verifica si un movimiento de alfil es válido
+ * @param board - Tablero actual
+ * @param piece - Pieza a mover
+ * @param source - Coordenadas de origen [fila, columna]
+ * @param target - Coordenadas de destino [fila, columna]
+ * @returns Verdadero si el movimiento es válido, falso en caso contrario
+ */
+export function isValidBishopMove(board: ChessSquare[][], _piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
   
-  // Validar límites del tablero
   if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  if (srcRow === tgtRow && srcCol === tgtCol) return false;
   
   const rowDiff = Math.abs(srcRow - tgtRow);
   const colDiff = Math.abs(srcCol - tgtCol);
-  // Debe moverse diagonalmente
+
   if (rowDiff !== colDiff) return false;
-  // Verificar que no haya piezas en el camino
+
   const rowStep = tgtRow > srcRow ? 1 : -1;
   const colStep = tgtCol > srcCol ? 1 : -1;
   for (let i = 1; i < rowDiff; i++) {
@@ -95,20 +121,35 @@ export function isValidBishopMove(board: ChessSquare[][], piece: ChessPiece, sou
   return true;
 }
 
+/**
+ * Verifica si un movimiento de reina es válido
+ * @param board - Tablero actual
+ * @param piece - Pieza a mover
+ * @param source - Coordenadas de origen [fila, columna]
+ * @param target - Coordenadas de destino [fila, columna]
+ * @returns Verdadero si el movimiento es válido, falso en caso contrario
+ */
 export function isValidQueenMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
-  // La reina combina torre y alfil
   return isValidRookMove(board, piece, source, target) || isValidBishopMove(board, piece, source, target);
 }
 
-export function isValidKingMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
+/**
+ * Verifica si un movimiento de rey es válido
+ * @param board - Tablero actual
+ * @param piece - Pieza a mover
+ * @param source - Coordenadas de origen [fila, columna]
+ * @param target - Coordenadas de destino [fila, columna]
+ * @returns Verdadero si el movimiento es válido, falso en caso contrario
+ */
+export function isValidKingMove(_board: ChessSquare[][], _piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   const [srcRow, srcCol] = source;
   const [tgtRow, tgtCol] = target;
   
-  // Validar límites del tablero
   if (!isValidCoordinates(tgtRow, tgtCol)) return false;
+  if (srcRow === tgtRow && srcCol === tgtCol) return false;
   
   const rowDiff = Math.abs(srcRow - tgtRow);
   const colDiff = Math.abs(srcCol - tgtCol);
-  // Movimiento de una casilla en cualquier dirección
-  return rowDiff <= 1 && colDiff <= 1 && (rowDiff > 0 || colDiff > 0);
+
+  return rowDiff <= 1 && colDiff <= 1;
 }

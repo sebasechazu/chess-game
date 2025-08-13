@@ -21,6 +21,7 @@
             [board]="chessService.board()"
             [currentTurn]="chessService.currentTurn()"
             [gameOver]="chessService.gameOver()"
+            [validateMove]="validateMove.bind(this)"
             (moveAttempt)="onMoveAttempt($event)" />
         </div>
       </div>
@@ -51,6 +52,7 @@
             [board]="chessService.board()"
             [currentTurn]="chessService.currentTurn()"
             [gameOver]="chessService.gameOver()"
+            [validateMove]="validateMove.bind(this)"
             (moveAttempt)="onMoveAttempt($event)" />
         </div>
       </div>

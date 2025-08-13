@@ -1,59 +1,96 @@
-# ChessGame
+# ♛ Chess Game
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.4.
+Una aplicación web de ajedrez moderna construida con Angular 18+ que te permite jugar contra la computadora o simplemente disfrutar de una partida casual.
 
-## Development server
+## 🎯 ¿Qué hace esta app?
 
-To start a local development server, run:
+Es básicamente un juego de ajedrez completo donde puedes:
+- **Jugar contra la IA**: La computadora piensa sus movimientos y te da una buena pelea
+- **Arrastrar y soltar piezas**: Sistema intuitivo de drag & drop con validación visual
+- **Ver el historial**: Todas tus jugadas quedan registradas en notación algebraica
+- **Interfaz moderna**: Diseño limpio con animaciones suaves y responsive
 
-```bash
-ng serve
+La app sigue las reglas básicas del ajedrez (movimientos válidos, capturas, etc.) y tiene una IA que evalúa posiciones para elegir buenos movimientos.
+
+## 🛠️ Stack Técnico
+
+- **Angular 20** con Signals y programación reactiva
+- **TypeScript** con tipado estricto
+- **Tailwind CSS** para el diseño
+- **Angular CDK** para drag & drop
+
+## 🏗️ Arquitectura
+
+```
+src/app/
+├── chess-game/           # Componente principal (smart component)
+├── chess-board/          # Tablero de juego (presentational)  
+├── chess-piece/          # Piezas individuales
+├── helpers/              # Lógica de negocio
+│   ├── chess-rules.ts    # Validación de movimientos
+│   ├── chess-utils.ts    # Utilidades del tablero
+│   └── interfaces.ts     # Tipos y enums
+├── services/             # Servicios
+│   └── chess.service.ts  # Estado del juego y IA
+└── shared/               # Componentes reutilizables
+    ├── header-game/      # Header con info del juego
+    ├── history-game/     # Historial de movimientos  
+    ├── modal-game/       # Modales de victoria/empate
+    └── spinner-game/     # Loading spinner
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### Patrones implementados:
+- **Smart/Dumb Components**: Separación clara entre lógica y presentación
+- **Signals**: Estado reactivo moderno de Angular
+- **Two-way binding**: Comunicación fluida entre componentes
+- **Service Layer**: Lógica de negocio centralizada
+- **Type Safety**: TypeScript en modo estricto
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🚀 Cómo ejecutar
 
 ```bash
-ng generate --help
+# Instalar dependencias
+npm install
+
+# Ejecutar en desarrollo
+npm start
+
+# Compilar para producción
+npm run build
+
+# Ejecutar tests
+npm test
 ```
 
-## Building
+La app estará disponible en `http://localhost:4200`
 
-To build the project run:
+## 🎮 Características
 
-```bash
-ng build
-```
+- ✅ Validación de movimientos en tiempo real
+- ✅ Feedback visual (casillas verdes/rojas durante el drag)
+- ✅ IA con evaluación de posiciones
+- ✅ Historial de movimientos con notación algebraica
+- ✅ Detección de jaque mate y empate
+- ✅ Animaciones suaves
+- ✅ Diseño responsive
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## 📝 Próximas mejoras
 
-## Running unit tests
+- [ ] Enroque (castling)
+- [ ] Captura al paso (en passant)  
+- [ ] Promoción de peones
+- [ ] Niveles de dificultad de IA
+- [ ] Modo multijugador local
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## 🤝 Contribuir
 
-```bash
-ng test
-```
+El código está organizado para ser fácil de entender y extender. Si quieres contribuir:
 
-## Running end-to-end tests
+1. Fork del repositorio
+2. Crea una rama para tu feature
+3. Mantén la consistencia de código (signals, tipos, etc.)
+4. Haz un PR con una descripción clara
 
-For end-to-end (e2e) testing, run:
+---
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+*Desarrollado con ♥ usando Angular y las mejores prácticas de desarrollo frontend*

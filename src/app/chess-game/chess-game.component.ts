@@ -61,4 +61,14 @@ export class ChessGameComponent {
     this.chessService.makeMove(moveData.from, moveData.to);
   }
 
+  /**
+   * Valida un movimiento sin ejecutarlo (para feedback visual)
+   * @param from - Posición origen
+   * @param to - Posición destino
+   * @returns Resultado de la validación
+   */
+  validateMove(from: string, to: string) {
+    return this.chessService.validateMove(from, to);
+  }
+
 }

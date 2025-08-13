@@ -1,9 +1,9 @@
 import { ChessSquare, ChessPiece, PieceColor, Position, Coordinates, PieceType, SquareColor, PIECE_VALUES, PIECE_SYMBOLS } from './interfaces';
 
-// ===== UTILIDADES DE COORDENADAS =====
-
 /**
  * Convierte una posición de ajedrez a coordenadas numéricas
+ * @param position - Posición en notación algebraica (ej: 'e4')
+ * @returns Coordenadas numéricas {row, col}
  */
 export function positionToCoordinates(position: Position): Coordinates {
   const file = position.charCodeAt(0) - 97; // a=0, b=1, etc.
@@ -13,6 +13,9 @@ export function positionToCoordinates(position: Position): Coordinates {
 
 /**
  * Convierte coordenadas numéricas a posición de ajedrez
+ * @param row - Fila del tablero (0-7)
+ * @param col - Columna del tablero (0-7)
+ * @returns Posición en notación algebraica
  */
 export function coordinatesToPosition(row: number, col: number): Position {
   const file = String.fromCharCode(97 + col); // 0=a, 1=b, etc.
@@ -22,6 +25,9 @@ export function coordinatesToPosition(row: number, col: number): Position {
 
 /**
  * Valida si las coordenadas están dentro del tablero
+ * @param row - Fila a validar
+ * @param col - Columna a validar
+ * @returns Verdadero si las coordenadas son válidas
  */
 export function isValidCoordinates(row: number, col: number): boolean {
   return row >= 0 && row < 8 && col >= 0 && col < 8;
@@ -29,6 +35,8 @@ export function isValidCoordinates(row: number, col: number): boolean {
 
 /**
  * Valida si una posición de ajedrez es válida (a1-h8)
+ * @param position - Posición a validar
+ * @returns Verdadero si la posición es válida
  */
 export function isValidPosition(position: Position): boolean {
   if (position.length !== 2) return false;
@@ -37,10 +45,11 @@ export function isValidPosition(position: Position): boolean {
   return file >= 'a' && file <= 'h' && rank >= '1' && rank <= '8';
 }
 
-// ===== UTILIDADES DE TABLERO =====
-
 /**
  * Obtiene una casilla del tablero por posición
+ * @param board - Tablero actual
+ * @param position - Posición de la casilla
+ * @returns Casilla del tablero o null si no existe
  */
 export function getSquareAtPosition(board: ChessSquare[][], position: Position): ChessSquare | null {
   if (!isValidPosition(position)) return null;
@@ -55,6 +64,9 @@ export function getSquareAtPosition(board: ChessSquare[][], position: Position):
 
 /**
  * Obtiene una pieza del tablero por posición
+ * @param board - Tablero actual
+ * @param position - Posición de la pieza
+ * @returns Pieza encontrada o null si no existe
  */
 export function getPieceAtPosition(board: ChessSquare[][], position: Position): ChessPiece | null {
   const square = getSquareAtPosition(board, position);
@@ -63,6 +75,10 @@ export function getPieceAtPosition(board: ChessSquare[][], position: Position): 
 
 /**
  * Coloca una pieza en el tablero
+ * @param board - Tablero actual
+ * @param position - Posición donde colocar la pieza
+ * @param piece - Pieza a colocar
+ * @returns Verdadero si se colocó exitosamente
  */
 export function placePiece(board: ChessSquare[][], position: Position, piece: ChessPiece): boolean {
   const square = getSquareAtPosition(board, position);
@@ -74,6 +90,8 @@ export function placePiece(board: ChessSquare[][], position: Position, piece: Ch
 
 /**
  * Crea una copia profunda del tablero
+ * @param board - Tablero a clonar
+ * @returns Nueva instancia del tablero
  */
 export function deepCloneBoard(board: ChessSquare[][]): ChessSquare[][] {
   return board.map(row => 
@@ -86,6 +104,9 @@ export function deepCloneBoard(board: ChessSquare[][]): ChessSquare[][] {
 
 /**
  * Compara si dos tableros son diferentes
+ * @param previous - Tablero anterior
+ * @param current - Tablero actual
+ * @returns Verdadero si los tableros son diferentes
  */
 export function hasBoardChanged(previous: ChessSquare[][], current: ChessSquare[][]): boolean {
   for (let row = 0; row < 8; row++) {
@@ -101,10 +122,11 @@ export function hasBoardChanged(previous: ChessSquare[][], current: ChessSquare[
   return false;
 }
 
-// ===== UTILIDADES DE BÚSQUEDA =====
-
 /**
  * Obtiene todas las posiciones de piezas de un color específico
+ * @param board - Tablero actual
+ * @param color - Color de las piezas a buscar
+ * @returns Array de posiciones de piezas del color especificado
  */
 export function getAllPiecesForColor(board: ChessSquare[][], color: PieceColor): Position[] {
   const pieces: Position[] = [];
@@ -122,6 +144,8 @@ export function getAllPiecesForColor(board: ChessSquare[][], color: PieceColor):
 
 /**
  * Busca los reyes en el tablero
+ * @param board - Tablero actual
+ * @returns Objeto indicando si existen los reyes blanco y negro
  */
 export function findKings(board: ChessSquare[][]): { white: boolean; black: boolean } {
   let whiteKingExists = false;
@@ -136,7 +160,6 @@ export function findKings(board: ChessSquare[][]): { white: boolean; black: bool
           blackKingExists = true;
         }
         
-        // Si encontramos ambos reyes, podemos salir temprano
         if (whiteKingExists && blackKingExists) {
           return { white: true, black: true };
         }
@@ -146,8 +169,6 @@ export function findKings(board: ChessSquare[][]): { white: boolean; black: bool
   
   return { white: whiteKingExists, black: blackKingExists };
 }
-
-// ===== UTILIDADES DE NOTACIÓN =====
 
 /**
  * Genera la notación algebraica de un movimiento
@@ -163,10 +184,10 @@ export function generateMoveNotation(
   return `${symbol}${sourcePos}${capture}${targetPos}`;
 }
 
-// ===== UTILIDADES DE IA =====
-
 /**
  * Calcula bonus por posición central para la IA
+ * @param coords - Coordenadas a evaluar
+ * @returns Valor de bonus por posición central
  */
 export function getCenterPositionBonus(coords: Coordinates): number {
   const centerDistance = Math.abs(3.5 - coords.row) + Math.abs(3.5 - coords.col);
@@ -175,15 +196,17 @@ export function getCenterPositionBonus(coords: Coordinates): number {
 
 /**
  * Evalúa el valor de una pieza capturada
+ * @param pieceType - Tipo de pieza a evaluar
+ * @returns Valor numérico de la pieza
  */
 export function getPieceValue(pieceType: PieceType): number {
   return PIECE_VALUES[pieceType] || 0;
 }
 
-// ===== UTILIDADES DE INICIALIZACIÓN =====
 
 /**
  * Crea un tablero vacío de ajedrez
+ * @returns Tablero de 8x8 inicializado con casillas vacías
  */
 export function createEmptyBoard(): ChessSquare[][] {
   return Array.from({ length: 8 }, (_, row) => 

@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { ChessSquare, SquareColor, PieceColor } from '../../helpers/interfaces';
+import { ChessSquare, SquareColor, PieceColor, MoveResult } from '../../helpers/interfaces';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NgClass } from '@angular/common';
 import { ChessPieceComponent } from "../chess-piece/chess-piece.component";
@@ -37,6 +37,7 @@ export class ChessBoardComponent {
   board = input<ChessSquare[][]>([]);
   currentTurn = input<PieceColor>(PieceColor.White); 
   gameOver = input<boolean>(false);
+  validateMove = input<(from: string, to: string) => MoveResult>();
   
   moveAttempt = output<{ from: string; to: string }>();
 
@@ -105,7 +106,16 @@ export class ChessBoardComponent {
     if (!this.dragging) return;
     
     this.hoveredSquare = square.position;
-    this.lastMoveValid = true;
+    
+    // Validar si el movimiento es válido usando la función pasada desde el padre
+    const validateMoveFn = this.validateMove();
+    if (validateMoveFn) {
+      const moveResult = validateMoveFn(this.dragging, square.position);
+      this.lastMoveValid = moveResult.success;
+    } else {
+      // Fallback: asumir válido si no hay función de validación
+      this.lastMoveValid = true;
+    }
   }
 
   /**
