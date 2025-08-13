@@ -1,6 +1,6 @@
-import { Component, Input, ChangeDetectionStrategy, computed, signal } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChessPiece } from '../../interfaces/chess-piece.interface';
+import { ChessPiece } from '../../helpers/interfaces';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({

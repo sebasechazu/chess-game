@@ -1,10 +1,9 @@
-import { Component, input, computed, output } from '@angular/core';
-import { ChessSquare, SquareColor } from '../../interfaces/chess-square.interface';
+import { Component, input, output } from '@angular/core';
+import { ChessSquare, SquareColor, PieceColor, ChessPiece, PieceType } from '../../helpers/interfaces';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NgClass } from '@angular/common';
 import { ChessPieceComponent } from "../chess-piece/chess-piece.component";
-import { PieceColor, ChessPiece, PieceType } from '../../interfaces/chess-piece.interface';
-import { isValidPawnMove, isValidRookMove, isValidKnightMove, isValidBishopMove, isValidQueenMove, isValidKingMove } from '../../services/chess-move-rules';
+import { isValidPawnMove, isValidRookMove, isValidKnightMove, isValidBishopMove, isValidQueenMove, isValidKingMove } from '../../helpers/chess-move-rules';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({

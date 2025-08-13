@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ChessService } from '../services/chess.service';
 import { CommonModule } from '@angular/common';
 import { ChessBoardComponent } from './chess-board/chess-board.component';

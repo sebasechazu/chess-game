@@ -1,5 +1,4 @@
-import { ChessSquare } from '../interfaces/chess-square.interface';
-import { ChessPiece, PieceType } from '../interfaces/chess-piece.interface';
+import { ChessSquare, ChessPiece, PieceType } from './interfaces';
 
 export function isValidPawnMove(board: ChessSquare[][], piece: ChessPiece, source: [number, number], target: [number, number]): boolean {
   // Implementación básica: solo avance de 1 casilla hacia adelante
