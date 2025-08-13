@@ -35,4 +35,12 @@ export class ChessGameComponent {
     this.chessService.resetGame();
   }
 
+  onToggleAi(enabled: boolean): void {
+    this.chessService.aiEnabled.set(enabled);
+  }
+
+  onMoveAttempt(moveData: { from: string; to: string }): void {
+    this.chessService.executeMove(moveData.from, moveData.to);
+  }
+
 }

@@ -1,4 +1,4 @@
-import { Component, model, input, computed } from '@angular/core';
+import { Component, input, computed, output } from '@angular/core';
 import { ChessSquare, SquareColor } from '../../interfaces/chess-square.interface';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NgClass } from '@angular/common';
@@ -16,12 +16,16 @@ export class ChessBoardComponent {
   readonly columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   readonly rows = [8, 7, 6, 5, 4, 3, 2, 1];
   readonly SquareColor = SquareColor; 
-  board = model<ChessSquare[][]>([]);
-  currentTurn = model<PieceColor>(PieceColor.White); 
-  gameOver = model<boolean>(false); 
+  
+  // Inputs del componente padre
+  board = input<ChessSquare[][]>([]);
+  currentTurn = input<PieceColor>(PieceColor.White); 
+  gameOver = input<boolean>(false);
+  
+  // Output para emitir movimientos válidos al componente padre
+  moveAttempt = output<{ from: string; to: string }>();
 
   public hoveredSquare: string | null = null;
-  
   public dragging: string | null = null;
   public lastMoveValid: boolean | null = null;
 
@@ -49,27 +53,14 @@ export class ChessBoardComponent {
       this.lastMoveValid = null;
       return;
     }
+
     const boardSnapshot = this.board();
     const isValid = this.isLegalMove(boardSnapshot, sourcePosition, targetPosition);
     this.lastMoveValid = isValid;
 
     if (isValid) {
-      const newBoard = boardSnapshot.map(row => row.map(square => ({ ...square })));
-      const [sourceFile, sourceRank] = sourcePosition.split('');
-      const sourceCol = sourceFile.charCodeAt(0) - 97;
-      const sourceRow = 8 - parseInt(sourceRank);
-      const [targetFile, targetRank] = targetPosition.split('');
-      const targetCol = targetFile.charCodeAt(0) - 97;
-      const targetRow = 8 - parseInt(targetRank);
-      
-      const updatedPiece = { ...movingPiece, position: targetPosition, hasMoved: true };
-      newBoard[targetRow][targetCol].piece = updatedPiece;
-      newBoard[sourceRow][sourceCol].piece = null;
-      
-      this.board.set(newBoard);
-      
-      const nextTurn = this.currentTurn() === PieceColor.White ? PieceColor.Black : PieceColor.White;
-      this.currentTurn.set(nextTurn);
+      // Emitir el movimiento al componente padre para que lo procese
+      this.moveAttempt.emit({ from: sourcePosition, to: targetPosition });
     }
 
     setTimeout(() => {

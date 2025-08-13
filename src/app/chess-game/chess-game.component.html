@@ -11,14 +11,17 @@
         [totalMovements]="chessService.totalMovements()"
         [whiteCaptures]="chessService.whiteCaptures()"
         [blackCaptures]="chessService.blackCaptures()"
-        [onReset]="onReset.bind(this)" />
+        [aiEnabled]="chessService.aiEnabled()"
+        [onReset]="onReset.bind(this)"
+        (toggleAi)="onToggleAi($event)" />
 
       <div class="w-full flex justify-center items-center">
         <div class="aspect-square w-full max-w-lg flex items-center justify-center">
           <app-chess-board class="w-full h-full"
-            [(board)]="board"
-            [(currentTurn)]="currentTurn"
-            [(gameOver)]="gameOver" />
+            [board]="chessService.board()"
+            [currentTurn]="chessService.currentTurn()"
+            [gameOver]="chessService.gameOver()"
+            (moveAttempt)="onMoveAttempt($event)" />
         </div>
       </div>
 
@@ -35,8 +38,10 @@
             [totalMovements]="chessService.totalMovements()"
             [whiteCaptures]="chessService.whiteCaptures()"
             [blackCaptures]="chessService.blackCaptures()"
+            [aiEnabled]="chessService.aiEnabled()"
             [onReset]="onReset.bind(this)"
-            [isVertical]="true" />
+            [isVertical]="true"
+            (toggleAi)="onToggleAi($event)" />
         </div>
       </div>
 
@@ -44,9 +49,10 @@
       <div class="flex-1 flex items-center justify-center px-8">
         <div class="aspect-square w-full max-w-3xl bg-white rounded-lg shadow-lg border-2 border-slate-200 p-4">
           <app-chess-board class="w-full h-full"
-            [(board)]="board"
-            [(currentTurn)]="currentTurn"
-            [(gameOver)]="gameOver" />
+            [board]="chessService.board()"
+            [currentTurn]="chessService.currentTurn()"
+            [gameOver]="chessService.gameOver()"
+            (moveAttempt)="onMoveAttempt($event)" />
         </div>
       </div>
 

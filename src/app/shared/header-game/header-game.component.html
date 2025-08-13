@@ -46,6 +46,18 @@
 
     <!-- Botón reiniciar -->
     <div class="flex-shrink-0 w-full" [class.mt-auto]="isVertical">
+      <!-- Toggle IA -->
+      <button (click)="onToggleAi()"
+        [class.bg-green-500]="aiEnabled"
+        [class.hover:bg-green-600]="aiEnabled" 
+        [class.bg-gray-500]="!aiEnabled"
+        [class.hover:bg-gray-600]="!aiEnabled"
+        class="text-white font-bold py-2 px-4 rounded-lg transition-colors w-full shadow-md mb-2">
+        <span class="text-sm">
+          {{ aiEnabled ? '🤖 IA: Activada' : '🎮 IA: Desactivada' }}
+        </span>
+      </button>
+      
       <button (click)="onReset()" 
         class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors w-full shadow-md">
         <span class="text-sm">🔄 Reiniciar Juego</span>
