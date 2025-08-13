@@ -1,16 +1,34 @@
 import { Component, Input, ChangeDetectionStrategy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChessPiece } from '../../interfaces/chess-piece.interface';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-chess-piece',
   templateUrl: './chess-piece.component.html',
   imports: [CommonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('pieceMove', [
+      state('moving', style({
+        transform: 'scale(1.1) rotate(5deg)',
+        filter: 'brightness(1.2)',
+        zIndex: 100
+      })),
+      state('idle', style({
+        transform: 'scale(1) rotate(0deg)',
+        filter: 'brightness(1)',
+        zIndex: 'auto'
+      })),
+      transition('idle => moving', animate('150ms ease-out')),
+      transition('moving => idle', animate('200ms ease-in'))
+    ])
+  ]
 })
 export class ChessPieceComponent {
 
  @Input({ required: true }) piece!: ChessPiece;
+ @Input() isMoving: boolean = false;
   
   private readonly basePath = 'assets/img/chess/';
   private readonly fallbackImage = 'assets/img/chess/fallback-piece.svg';
@@ -35,5 +53,9 @@ export class ChessPieceComponent {
       console.warn(`Failed to load chess piece image: ${imgElement.src}`);
       imgElement.src = this.fallbackImage;
     }
+  }
+
+  getMoveState(): string {
+    return this.isMoving ? 'moving' : 'idle';
   }
 }

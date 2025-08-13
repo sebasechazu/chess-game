@@ -1,12 +1,13 @@
-<div class="w-full h-full flex items-center justify-center relative z-10 p-1"
+<div class="w-full h-full flex items-center justify-center relative p-1"
      [class.opacity-0]="!piece"
      role="img" 
-     [attr.aria-label]="altText()">
+     [attr.aria-label]="altText()"
+     [@pieceMove]="getMoveState()">
   
   @if (piece && imageSrc(); as src) {
     <img [src]="src"
          [alt]="altText()"
-         class="w-full h-full object-contain pointer-events-none select-none transition-opacity duration-200 hover:opacity-90"
+         class="w-full h-full object-contain select-none"
          draggable="false"
          (error)="onImageError($event)"
     />

@@ -22,7 +22,7 @@
     </div>
     <!-- Tablero principal -->
     <div class="col-start-2 row-start-2 grid grid-cols-8 grid-rows-8 aspect-square border-2 border-gray-700 shadow-lg relative w-full h-full"
-        cdkDropListGroup>
+        cdkDropListGroup [@boardAppear]>
         @for (row of board(); track row) {
         @for (square of row; track square) {
         <div class="chess-square-container aspect-square w-full h-full relative flex justify-center items-center box-border"
@@ -47,7 +47,7 @@
                 <div cdkDrag (cdkDragStarted)="onDragStarted(square)" (cdkDragEnded)="onDragEnded()"
                     class="flex justify-center items-center w-full h-full cursor-grab z-10 active:cursor-grabbing">
                     <div class="w-full h-full flex justify-center items-center">
-                        <app-chess-piece [piece]="square.piece"></app-chess-piece>
+                        <app-chess-piece [piece]="square.piece" [isMoving]="dragging === square.position"></app-chess-piece>
                     </div>
                     <!-- Preview de la pieza arrastrada: centrado respecto al cursor -->
                     <ng-template cdkDragPreview>

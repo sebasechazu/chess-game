@@ -5,11 +5,26 @@ import { NgClass } from '@angular/common';
 import { ChessPieceComponent } from "../chess-piece/chess-piece.component";
 import { PieceColor, ChessPiece, PieceType } from '../../interfaces/chess-piece.interface';
 import { isValidPawnMove, isValidRookMove, isValidKnightMove, isValidBishopMove, isValidQueenMove, isValidKingMove } from '../../services/chess-move-rules';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-chess-board',
   templateUrl: './chess-board.component.html',
   imports: [ChessPieceComponent, DragDropModule, NgClass],
+  animations: [
+    trigger('boardAppear', [
+      transition(':enter', [
+        query('.chess-square-container', [
+          style({ opacity: 0, transform: 'translateY(30px) scale(0.8)' }),
+          stagger(20, [
+            animate('400ms cubic-bezier(0.34, 1.56, 0.64, 1)', 
+              style({ opacity: 1, transform: 'translateY(0) scale(1)' })
+            )
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ]
 })
 export class ChessBoardComponent {
 
