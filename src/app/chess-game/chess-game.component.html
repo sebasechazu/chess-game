@@ -5,8 +5,8 @@
 
   @if (!chessService.isLoading() && chessService.gameInitialized()) {
     <!-- Layout móvil -->
-    <div class="w-full max-w-4xl flex flex-col gap-6 items-center justify-center px-2 py-4 md:hidden">
-      <app-header-game class="w-full"
+  <div class="w-full max-w-4xl flex flex-col gap-1 items-center justify-center px-2 py-2 md:hidden h-full overflow-auto">
+      <app-header-game class="w-full flex-shrink-0"
         [currentTurn]="chessService.currentTurn()"
         [totalMovements]="chessService.totalMovements()"
         [whiteCaptures]="chessService.whiteCaptures()"
@@ -15,8 +15,8 @@
         [onReset]="onReset.bind(this)"
         (toggleAi)="onToggleAi($event)" />
 
-      <div class="w-full flex justify-center items-center">
-        <div class="aspect-square w-full max-w-lg flex items-center justify-center">
+      <div class="w-full flex-1 flex justify-center items-center min-h-0">
+        <div class="aspect-square w-full max-w-sm flex items-center justify-center">
           <app-chess-board class="w-full h-full"
             [board]="chessService.board()"
             [currentTurn]="chessService.currentTurn()"
@@ -25,7 +25,6 @@
         </div>
       </div>
 
-      <app-history-game class="w-full" [moveHistory]="chessService.moveHistory()" />
     </div>
 
     <!-- Layout escritorio -->

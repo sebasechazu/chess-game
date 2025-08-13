@@ -1,67 +1,114 @@
-<div class="p-4 rounded-lg" 
+<div class="p-2 rounded-lg bg-slate-100" 
   [class.h-full]="isVertical" 
-  [class.mb-4]="!isVertical"
-  [class.bg-slate-100]="!isVertical">
+  [class.p-4]="isVertical"
+  [class.bg-transparent]="isVertical">
   
-  <div class="flex items-center h-full" 
-    [class.justify-between]="!isVertical" 
-    [class.flex-col]="isVertical" 
+  <div class="flex h-full" 
+    [class.flex-col]="true" 
+    [class.items-center]="isVertical"
+    [class.justify-between]="isVertical"
+    [class.gap-2]="!isVertical"
     [class.gap-6]="isVertical">
     
     <!-- Información del turno -->
-    <div class="text-center" [class.flex-shrink-0]="isVertical">
-      <div class="text-lg font-bold mb-3">Turno Actual</div>
+    <div class="text-center flex-shrink-0">
+      <div class="text-sm font-bold mb-1" [class.text-lg]="isVertical" [class.mb-3]="isVertical">
+        Turno Actual
+      </div>
       <div [class.text-white]="currentTurn === 'white'" 
            [class.text-black]="currentTurn === 'black'"
            [class.bg-gray-800]="currentTurn === 'white'" 
            [class.bg-gray-200]="currentTurn === 'black'"
-           class="py-2 px-4 rounded-lg inline-block text-lg font-semibold">
+           class="py-1 px-3 rounded-md inline-block text-sm font-semibold"
+           [class.py-2]="isVertical"
+           [class.px-4]="isVertical"
+           [class.text-base]="isVertical"
+           [class.rounded-lg]="isVertical">
         {{ currentTurn === 'white' ? 'Blancas' : 'Negras' }}
       </div>
     </div>
 
     <!-- Estadísticas -->
-    <div class="flex-1 w-full" [class.my-4]="isVertical">
-      <div class="grid gap-3" 
+    <div class="flex-1 w-full min-w-0" [class.my-4]="isVertical">
+      <div class="grid gap-1" 
         [class.grid-cols-3]="!isVertical"
         [class.grid-cols-1]="isVertical"
+        [class.gap-3]="isVertical"
         [class]="statsAnimationClass">
         
-        <div class="bg-white p-3 rounded-lg shadow text-center border">
-          <div class="text-xs text-gray-500 uppercase tracking-wide">Movimientos</div>
-          <div class="text-xl font-bold text-blue-600">{{ totalMovements }}</div>
+        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
+             [class.p-3]="isVertical"
+             [class.rounded-lg]="isVertical">
+          <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight"
+               [class.tracking-wide]="isVertical"
+               [class.leading-normal]="isVertical">
+            Movimientos
+          </div>
+          <div class="text-sm font-bold text-blue-600 leading-tight"
+               [class.text-xl]="isVertical"
+               [class.leading-normal]="isVertical">
+            {{ totalMovements }}
+          </div>
         </div>
         
-        <div class="bg-white p-3 rounded-lg shadow text-center border">
-          <div class="text-xs text-gray-500 uppercase tracking-wide">Capturas ♔</div>
-          <div class="text-xl font-bold text-green-600">{{ whiteCaptures }}</div>
+        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
+             [class.p-3]="isVertical"
+             [class.rounded-lg]="isVertical">
+          <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight"
+               [class.tracking-wide]="isVertical"
+               [class.leading-normal]="isVertical">
+            Capturas ♔
+          </div>
+          <div class="text-sm font-bold text-green-600 leading-tight"
+               [class.text-xl]="isVertical"
+               [class.leading-normal]="isVertical">
+            {{ whiteCaptures }}
+          </div>
         </div>
         
-        <div class="bg-white p-3 rounded-lg shadow text-center border">
-          <div class="text-xs text-gray-500 uppercase tracking-wide">Capturas ♚</div>
-          <div class="text-xl font-bold text-red-600">{{ blackCaptures }}</div>
+        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
+             [class.p-3]="isVertical"
+             [class.rounded-lg]="isVertical">
+          <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight"
+               [class.tracking-wide]="isVertical"
+               [class.leading-normal]="isVertical">
+            Capturas ♚
+          </div>
+          <div class="text-sm font-bold text-red-600 leading-tight"
+               [class.text-xl]="isVertical"
+               [class.leading-normal]="isVertical">
+            {{ blackCaptures }}
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Botón reiniciar -->
-    <div class="flex-shrink-0 w-full" [class.mt-auto]="isVertical">
-      <!-- Toggle IA -->
-      <button (click)="onToggleAi()"
-        [class.bg-green-500]="aiEnabled"
-        [class.hover:bg-green-600]="aiEnabled" 
-        [class.bg-gray-500]="!aiEnabled"
-        [class.hover:bg-gray-600]="!aiEnabled"
-        class="text-white font-bold py-2 px-4 rounded-lg transition-colors w-full shadow-md mb-2">
-        <span class="text-sm">
-          {{ aiEnabled ? '🤖 IA: Activada' : '🎮 IA: Desactivada' }}
-        </span>
-      </button>
-      
-      <button (click)="onReset()" 
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors w-full shadow-md">
-        <span class="text-sm">🔄 Reiniciar Juego</span>
-      </button>
+    <!-- Botones -->
+    <div class="flex-shrink-0" [class.w-full]="isVertical" [class.mt-auto]="isVertical">
+      <div class="grid gap-2" 
+           [class.grid-cols-2]="!isVertical"
+           [class.grid-cols-1]="isVertical">
+        <!-- Toggle IA -->
+        <button (click)="onToggleAi()"
+          [class.bg-green-500]="aiEnabled"
+          [class.hover:bg-green-600]="aiEnabled" 
+          [class.bg-gray-500]="!aiEnabled"
+          [class.hover:bg-gray-600]="!aiEnabled"
+          class="text-white font-bold py-2 px-3 rounded-lg transition-colors shadow-sm"
+          [class.w-full]="isVertical"
+          [class.shadow-md]="isVertical">
+          <span class="text-sm">
+            {{ aiEnabled ? '🤖 IA ON' : '🎮 IA OFF' }}
+          </span>
+        </button>
+        
+        <button (click)="onReset()" 
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition-colors shadow-sm"
+          [class.w-full]="isVertical"
+          [class.shadow-md]="isVertical">
+          <span class="text-sm">🔄 Reset</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>

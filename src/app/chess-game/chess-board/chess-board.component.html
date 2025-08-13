@@ -1,14 +1,20 @@
 <div
-    class="w-full h-full aspect-square mx-auto grid grid-cols-[5%_90%_5%] grid-rows-[5%_90%_5%] gap-0">
-    <!-- Coordenadas superiores (letras a-h) -->
-    <div class="col-start-2 row-start-1 grid grid-cols-8 justify-items-center items-center text-sm font-semibold">
+    class="w-full h-full aspect-square mx-auto grid gap-0"
+    [class.grid-cols-[5%_90%_5%]]="false"
+    [class.grid-rows-[5%_90%_5%]]="false"
+    [class.grid-cols-[0%_100%_0%]]="true"
+    [class.grid-rows-[0%_100%_0%]]="true"
+    [class.sm:grid-cols-[5%_90%_5%]]="true"
+    [class.sm:grid-rows-[5%_90%_5%]]="true">
+    <!-- Coordenadas superiores (letras a-h) - Ocultas en móvil -->
+    <div class="col-start-2 row-start-1 hidden sm:grid sm:grid-cols-8 justify-items-center items-center text-sm font-semibold">
         @for (col of columns; track col) {
         <div class="flex justify-center items-center text-center h-full w-full" [style.gridColumn]="$index+1">{{ col }}
         </div>
         }
     </div>
-    <!-- Coordenadas izquierdas (números 8-1) -->
-    <div class="col-start-1 row-start-2 grid grid-rows-8 items-center justify-items-center text-sm font-semibold">
+    <!-- Coordenadas izquierdas (números 8-1) - Ocultas en móvil -->
+    <div class="col-start-1 row-start-2 hidden sm:grid sm:grid-rows-8 items-center justify-items-center text-sm font-semibold">
         @for (row of rows; track row) {
         <div class="flex justify-center items-center text-center h-full w-full" [style.gridRow]="$index+1">{{
             row }}</div>
@@ -57,16 +63,16 @@
         }
     </div>
 
-    <!-- Coordenadas derechas -->
-    <div class="col-start-3 row-start-2 grid grid-rows-8 items-center justify-items-center text-sm font-semibold">
+    <!-- Coordenadas derechas - Ocultas en móvil -->
+    <div class="col-start-3 row-start-2 hidden sm:grid sm:grid-rows-8 items-center justify-items-center text-sm font-semibold">
         @for (row of rows; track row) {
         <div class="flex justify-center items-center text-center h-full w-full"
             [style.gridRow]="$index+1">{{ row }}</div>
         }
     </div>
 
-    <!-- Coordenadas inferiores -->
-    <div class="col-start-2 row-start-3 grid grid-cols-8 justify-items-center items-center text-sm font-semibold">
+    <!-- Coordenadas inferiores - Ocultas en móvil -->
+    <div class="col-start-2 row-start-3 hidden sm:grid sm:grid-cols-8 justify-items-center items-center text-sm font-semibold">
         @for (col of columns; track col) {
         <div class="flex justify-center items-center text-center h-full w-full"
             [style.gridColumn]="$index+1">{{ col }}
