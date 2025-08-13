@@ -21,10 +21,13 @@
         @for (square of row; track square) {
         <div class="chess-square-container aspect-square w-full h-full relative flex justify-center items-center box-border"
             cdkDropList [cdkDropListData]="square" [id]="'drop-' + square.position"
-            (cdkDropListDropped)="onPieceDrop($event)" [ngClass]="{
-                                    'bg-yellow-100': square.color === 'light',
-                                    'bg-gray-700': square.color === 'dark'
-                                }">
+            (cdkDropListDropped)="onPieceDrop($event)" (cdkDropListEntered)="onSquareDragEnter(square)"
+            (cdkDropListExited)="onSquareDragLeave(square)" [ngClass]="{
+                                'bg-yellow-100': square.color === SquareColor.Light,
+                                'bg-gray-700': square.color === SquareColor.Dark,
+                                'ring-4 ring-inset ring-green-500': hoveredSquare === square.position && lastMoveValid === true,
+                                'ring-4 ring-inset ring-red-500': hoveredSquare === square.position && lastMoveValid === false
+                        }">
             <div class="w-full h-full relative transition-colors duration-200 flex justify-center items-center">
                 <!-- Piezas que no se pueden arrastrar (turno incorrecto o juego terminado) -->
                 @if (square.piece && (square.piece.color !== currentTurn() || gameOver()) && dragging !==
@@ -35,14 +38,14 @@
                 }
                 <!-- Piezas del turno actual que se pueden arrastrar -->
                 @if (square.piece && square.piece.color === currentTurn() && !gameOver()) {
-                <div cdkDrag (cdkDragStarted)="onDragStarted(square)"
+                <div cdkDrag (cdkDragStarted)="onDragStarted(square)" (cdkDragEnded)="onDragEnded()"
                     class="flex justify-center items-center w-full h-full cursor-grab z-10 active:cursor-grabbing">
                     <div class="w-full h-full flex justify-center items-center">
                         <app-chess-piece [piece]="square.piece"></app-chess-piece>
                     </div>
-                    <!-- Preview de la pieza arrastrada: igual tamaño y estilo que la pieza colocada -->
+                    <!-- Preview de la pieza arrastrada: centrado respecto al cursor -->
                     <ng-template cdkDragPreview>
-                        <div class="flex items-center justify-center max-w-[48px] max-h-[48px]">
+                        <div class="flex items-center justify-center w-12 h-12 transform -translate-x-6 -translate-y-6">
                             <app-chess-piece [piece]="square.piece"></app-chess-piece>
                         </div>
                     </ng-template>
@@ -65,9 +68,11 @@
     <!-- Coordenadas inferiores -->
     <div class="col-start-2 row-start-3 grid grid-cols-8 justify-items-center items-center">
         @for (col of columns; track col) {
-        <div class="flex justify-center items-center text-center h-full w-full" [style.gridColumn]="$index+1">{{ col }}
+        <div class="flex justify-center items-center text-center h-full w-full font-bold text-base"
+            [style.gridColumn]="$index+1">{{ col }}
         </div>
         }
     </div>
+
 
 </div>

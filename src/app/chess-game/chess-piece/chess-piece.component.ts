@@ -1,9 +1,6 @@
-
-
 import { Component, Input, ChangeDetectionStrategy, computed, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ChessPiece } from '../../interfaces/chess-piece.interface';
-
 
 @Component({
   selector: 'app-chess-piece',

@@ -7,8 +7,6 @@ import { SpinnerGameComponent } from '../shared/spinner-game/spinner-game.compon
 //import { HistoryGameComponent } from '../shared/history-game/history-game.component';
 //import { HeaderGameComponent } from '../shared/header-game/header-game.component';
 
-
-
 @Component({
   selector: 'app-chess-game',
   templateUrl: './chess-game.component.html',
@@ -24,8 +22,6 @@ import { SpinnerGameComponent } from '../shared/spinner-game/spinner-game.compon
 export class ChessGameComponent {
 
   readonly chessService = inject(ChessService);
-
-
   // Usar los signals del servicio directamente
   board = this.chessService.board;
   currentTurn = this.chessService.currentTurn;

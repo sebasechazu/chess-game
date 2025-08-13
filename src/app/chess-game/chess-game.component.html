@@ -1,6 +1,5 @@
 <div class="p-4 container mx-auto">
 
-  <!-- Loader -->
   @if (chessService.isLoading()) {
   <app-spinner-game />
   }
@@ -13,11 +12,9 @@
 
     <app-chess-board [(board)]="board" [(currentTurn)]="currentTurn" [(gameOver)]="gameOver" />
 
-
     <!-- <app-history-game [moveHistory]="chessService.moveHistory()" /> -->
   </div>
   }
-
 
   @if (chessService.victoryModalData().open) {
   <app-modal-game [modalData]="chessService.victoryModalData()"
