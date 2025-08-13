@@ -1,31 +1,55 @@
-<div class="bg-slate-100 p-4 rounded-lg mb-4">
-  <div class="flex justify-between items-center">
-    <div class="text-xl font-bold">
-      Turno: <span [class.text-white]="currentTurn === 'white'" [class.text-black]="currentTurn === 'black'"
-        [class.bg-gray-800]="currentTurn === 'white'" [class.py-1]="currentTurn === 'white'"
-        [class.px-2]="currentTurn === 'white'" [class.rounded]="currentTurn === 'white'">
-        {{ currentTurn === 'white' ? 'Blancas' : 'Negras' }}
-      </span>
-    </div>
-    <button (click)="onReset()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-      Reiniciar
-    </button>
-  </div>
-
-  <!-- Estadísticas -->
-  <div class="grid grid-cols-3 gap-4 mt-4" [class]="statsAnimationClass">
-    <div class="bg-white p-3 rounded-lg shadow text-center">
-      <div class="text-sm text-gray-500">Movimientos</div>
-      <div class="text-2xl font-bold">{{ totalMovements }}</div>
-    </div>
-    <div class="bg-white p-3 rounded-lg shadow text-center">
-      <div class="text-sm text-gray-500">Capturas Blancas</div>
-      <div class="text-2xl font-bold">{{ whiteCaptures }}</div>
-    </div>
-    <div class="bg-white p-3 rounded-lg shadow text-center">
-      <div class="text-sm text-gray-500">Capturas Negras</div>
-      <div class="text-2xl font-bold">{{ blackCaptures }}</div>
-    </div>
-  </div>
+<div class="p-4 rounded-lg" 
+  [class.h-full]="isVertical" 
+  [class.mb-4]="!isVertical"
+  [class.bg-slate-100]="!isVertical">
   
+  <div class="flex items-center h-full" 
+    [class.justify-between]="!isVertical" 
+    [class.flex-col]="isVertical" 
+    [class.gap-6]="isVertical">
+    
+    <!-- Información del turno -->
+    <div class="text-center" [class.flex-shrink-0]="isVertical">
+      <div class="text-lg font-bold mb-3">Turno Actual</div>
+      <div [class.text-white]="currentTurn === 'white'" 
+           [class.text-black]="currentTurn === 'black'"
+           [class.bg-gray-800]="currentTurn === 'white'" 
+           [class.bg-gray-200]="currentTurn === 'black'"
+           class="py-2 px-4 rounded-lg inline-block text-lg font-semibold">
+        {{ currentTurn === 'white' ? 'Blancas' : 'Negras' }}
+      </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="flex-1 w-full" [class.my-4]="isVertical">
+      <div class="grid gap-3" 
+        [class.grid-cols-3]="!isVertical"
+        [class.grid-cols-1]="isVertical"
+        [class]="statsAnimationClass">
+        
+        <div class="bg-white p-3 rounded-lg shadow text-center border">
+          <div class="text-xs text-gray-500 uppercase tracking-wide">Movimientos</div>
+          <div class="text-xl font-bold text-blue-600">{{ totalMovements }}</div>
+        </div>
+        
+        <div class="bg-white p-3 rounded-lg shadow text-center border">
+          <div class="text-xs text-gray-500 uppercase tracking-wide">Capturas ♔</div>
+          <div class="text-xl font-bold text-green-600">{{ whiteCaptures }}</div>
+        </div>
+        
+        <div class="bg-white p-3 rounded-lg shadow text-center border">
+          <div class="text-xs text-gray-500 uppercase tracking-wide">Capturas ♚</div>
+          <div class="text-xl font-bold text-red-600">{{ blackCaptures }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón reiniciar -->
+    <div class="flex-shrink-0 w-full" [class.mt-auto]="isVertical">
+      <button (click)="onReset()" 
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors w-full shadow-md">
+        <span class="text-sm">🔄 Reiniciar Juego</span>
+      </button>
+    </div>
+  </div>
 </div>

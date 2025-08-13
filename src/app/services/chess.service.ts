@@ -68,6 +68,8 @@ export class ChessService {
     this.board.set(newBoard);
     this.currentTurn.set(PieceColor.White);
     this.gameOver.set(false);
+    this.winnerColor.set(null);
+    this.showVictoryModal.set(false);
     this.isLoading.set(false);
     this.gameInitialized.set(true);
     this.moveHistory.set([]);
@@ -78,6 +80,10 @@ export class ChessService {
     this.totalMovements.set(0);
     this.whiteCaptures.set(0);
     this.blackCaptures.set(0);
+  }
+
+  resetGame(): void {
+    this.initializeGame();
   }
 
 

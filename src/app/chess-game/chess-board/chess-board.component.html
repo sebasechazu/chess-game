@@ -1,21 +1,21 @@
 <div
-    class="w-full max-w-[640px] min-h-[640px] aspect-square mx-auto grid grid-cols-[24px_1fr_24px] grid-rows-[24px_1fr_24px] gap-0 mb-6">
+    class="w-full h-full aspect-square mx-auto grid grid-cols-[5%_90%_5%] grid-rows-[5%_90%_5%] gap-0">
     <!-- Coordenadas superiores (letras a-h) -->
-    <div class="col-start-2 row-start-1 grid grid-cols-8 justify-items-center items-center">
+    <div class="col-start-2 row-start-1 grid grid-cols-8 justify-items-center items-center text-sm font-semibold">
         @for (col of columns; track col) {
         <div class="flex justify-center items-center text-center h-full w-full" [style.gridColumn]="$index+1">{{ col }}
         </div>
         }
     </div>
     <!-- Coordenadas izquierdas (números 8-1) -->
-    <div class="col-start-1 row-start-2 grid grid-rows-8 items-center justify-items-center">
+    <div class="col-start-1 row-start-2 grid grid-rows-8 items-center justify-items-center text-sm font-semibold">
         @for (row of rows; track row) {
-        <div class="flex justify-center items-center text-center h-full w-full text-base" [style.gridRow]="$index+1">{{
+        <div class="flex justify-center items-center text-center h-full w-full" [style.gridRow]="$index+1">{{
             row }}</div>
         }
     </div>
     <!-- Tablero principal -->
-    <div class="col-start-2 row-start-2 grid grid-cols-8 grid-rows-8 aspect-square border-2 border-gray-700 shadow-lg relative"
+    <div class="col-start-2 row-start-2 grid grid-cols-8 grid-rows-8 aspect-square border-2 border-gray-700 shadow-lg relative w-full h-full"
         cdkDropListGroup>
         @for (row of board(); track row) {
         @for (square of row; track square) {
@@ -32,7 +32,7 @@
                 <!-- Piezas que no se pueden arrastrar (turno incorrecto o juego terminado) -->
                 @if (square.piece && (square.piece.color !== currentTurn() || gameOver()) && dragging !==
                 square.position) {
-                <div class="piece-container">
+                <div class="piece-container w-full h-full flex justify-center items-center">
                     <app-chess-piece [piece]="square.piece"></app-chess-piece>
                 </div>
                 }
@@ -45,7 +45,7 @@
                     </div>
                     <!-- Preview de la pieza arrastrada: centrado respecto al cursor -->
                     <ng-template cdkDragPreview>
-                        <div class="flex items-center justify-center w-12 h-12 transform -translate-x-6 -translate-y-6">
+                        <div class="flex items-center justify-center w-16 h-16 transform -translate-x-8 -translate-y-8">
                             <app-chess-piece [piece]="square.piece"></app-chess-piece>
                         </div>
                     </ng-template>
@@ -58,21 +58,20 @@
     </div>
 
     <!-- Coordenadas derechas -->
-    <div class="col-start-3 row-start-2 grid grid-rows-8 items-center justify-items-center">
+    <div class="col-start-3 row-start-2 grid grid-rows-8 items-center justify-items-center text-sm font-semibold">
         @for (row of rows; track row) {
-        <div class="flex justify-center items-center text-center h-full w-full font-bold text-base"
+        <div class="flex justify-center items-center text-center h-full w-full"
             [style.gridRow]="$index+1">{{ row }}</div>
         }
     </div>
 
     <!-- Coordenadas inferiores -->
-    <div class="col-start-2 row-start-3 grid grid-cols-8 justify-items-center items-center">
+    <div class="col-start-2 row-start-3 grid grid-cols-8 justify-items-center items-center text-sm font-semibold">
         @for (col of columns; track col) {
-        <div class="flex justify-center items-center text-center h-full w-full font-bold text-base"
+        <div class="flex justify-center items-center text-center h-full w-full"
             [style.gridColumn]="$index+1">{{ col }}
         </div>
         }
     </div>
-
 
 </div>

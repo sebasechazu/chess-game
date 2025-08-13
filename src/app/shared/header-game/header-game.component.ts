@@ -11,4 +11,5 @@ export class HeaderGameComponent {
   @Input() whiteCaptures!: number;
   @Input() blackCaptures!: number;
   @Input() statsAnimationClass: string = '';
+  @Input() isVertical: boolean = false;
 }
