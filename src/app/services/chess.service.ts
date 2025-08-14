@@ -68,7 +68,7 @@ export class ChessService {
   public readonly blackCaptures: WritableSignal<number> = signal<number>(0);
   public readonly aiEnabled: WritableSignal<boolean> = signal<boolean>(true);
   // Dificultad de la IA: 1 = easy, 2 = medium, 3 = hard
-  public readonly aiDifficulty: WritableSignal<1 | 2 | 3> = signal<1 | 2 | 3>(2);
+  public readonly aiDifficulty: WritableSignal<1 | 2 | 3 | 4> = signal<1 | 2 | 3 | 4>(2);
 
   /** 
    * Datos reactivos para el modal de victoria 
@@ -254,6 +254,9 @@ export class ChessService {
     this.gameOver.set(false);
     this.winnerColor.set(null);
     this.showVictoryModal.set(false);
+  // Ocultar estado de jaque al reiniciar
+  this.whiteInCheck.set(false);
+  this.blackInCheck.set(false);
     this.moveHistory.set([]);
     this.totalMovements.set(0);
     this.whiteCaptures.set(0);
@@ -648,17 +651,17 @@ export class ChessService {
       // ya están ordenados
       return possibleMoves[0];
     }
-
-    // Hard: usar minimax a profundidad 2 para mirar respuesta del rival
+    // Hard / Very-hard: usar minimax con poda alpha-beta y mayor profundidad
     let bestMove: AiMove | null = null;
     let bestScore = -Infinity;
-    const depth = 2; // búsqueda a 2 plies (IA->oponente)
+    const depthForLevel: Record<number, number> = { 3: 3, 4: 4 };
+    const depth = depthForLevel[difficulty as number] || 3;
 
     for (const m of possibleMoves) {
       const nb = this.simulateMove(board, m.from, m.to);
-      const score = this.minimaxEvaluate(nb, depth - 1, false);
-      // pequeña sutilización con heurística previa
-      const finalScore = score + m.score * 0.1;
+      const score = this.minimaxAlphaBeta(nb, depth - 1, -Infinity, Infinity, false);
+      // combinar con heurística previa pero dar más peso a la evaluación minimax
+      const finalScore = score + m.score * 0.03;
       if (finalScore > bestScore) {
         bestScore = finalScore;
         bestMove = { ...m, score: finalScore };
@@ -728,13 +731,14 @@ export class ChessService {
    * @param level - Nivel de dificultad
    */
   public setAiDifficulty(level: AiDifficulty): void {
-    let val: 1 | 2 | 3 = 2;
+    let val: 1 | 2 | 3 | 4 = 2;
     if (typeof level === 'number') {
-      val = Math.max(1, Math.min(3, Math.floor(level))) as 1 | 2 | 3;
+      val = Math.max(1, Math.min(4, Math.floor(level))) as 1 | 2 | 3 | 4;
     } else {
       if (level === 'easy') val = 1;
       else if (level === 'medium') val = 2;
       else if (level === 'hard') val = 3;
+      else if (level === 'very-hard') val = 4;
     }
     this.aiDifficulty.set(val);
     // Limpiar cache cuando cambie dificultad
@@ -853,6 +857,62 @@ export class ChessService {
         if (val < best) best = val;
       }
       return best;
+    }
+  }
+
+  /**
+   * Minimax con poda alpha-beta para mejorar rendimiento en búsquedas más profundas.
+   * Devuelve la puntuación heurística del tablero desde la perspectiva de las negras (IA).
+   */
+  private minimaxAlphaBeta(board: ChessSquare[][], depth: number, alpha: number, beta: number, maximizingPlayer: boolean): number {
+    if (depth === 0) {
+      let total = 0;
+      for (const row of board) {
+        for (const sq of row) {
+          if (!sq.piece) continue;
+          const val = getPieceValue(sq.piece.type);
+          total += sq.piece.color === PieceColor.Black ? val : -val;
+        }
+      }
+      return total;
+    }
+
+    if (maximizingPlayer) {
+      const moves: AiMove[] = [];
+      const pieces = getAllPiecesForColor(board, PieceColor.Black);
+      for (const p of pieces) {
+        const targets = this.getValidMovesForPieceWithRules(board, p);
+        for (const t of targets) moves.push({ from: p, to: t, score: 0 });
+      }
+
+      if (moves.length === 0) return this.minimaxAlphaBeta(board, 0, alpha, beta, false);
+
+      let value = -Infinity;
+      for (const m of moves) {
+        const nb = this.simulateMove(board, m.from, m.to);
+        value = Math.max(value, this.minimaxAlphaBeta(nb, depth - 1, alpha, beta, false));
+        alpha = Math.max(alpha, value);
+        if (alpha >= beta) break; // poda
+      }
+      return value;
+    } else {
+      const moves: AiMove[] = [];
+      const pieces = getAllPiecesForColor(board, PieceColor.White);
+      for (const p of pieces) {
+        const targets = this.getValidMovesForPieceWithRules(board, p);
+        for (const t of targets) moves.push({ from: p, to: t, score: 0 });
+      }
+
+      if (moves.length === 0) return this.minimaxAlphaBeta(board, 0, alpha, beta, true);
+
+      let value = Infinity;
+      for (const m of moves) {
+        const nb = this.simulateMove(board, m.from, m.to);
+        value = Math.min(value, this.minimaxAlphaBeta(nb, depth - 1, alpha, beta, true));
+        beta = Math.min(beta, value);
+        if (beta <= alpha) break; // poda
+      }
+      return value;
     }
   }
 }

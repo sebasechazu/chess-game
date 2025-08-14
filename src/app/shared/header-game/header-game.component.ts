@@ -12,7 +12,7 @@ export class HeaderGameComponent {
   @Input() whiteCaptures!: number;
   @Input() blackCaptures!: number;
   @Input() aiEnabled!: boolean;
-  @Input() aiDifficulty!: 1 | 2 | 3;
+  @Input() aiDifficulty!: 1 | 2 | 3 | 4;
   @Input() whiteInCheck!: boolean;
   @Input() blackInCheck!: boolean;
   @Input() statsAnimationClass: string = '';
@@ -26,7 +26,8 @@ export class HeaderGameComponent {
 
   getDifficultyLabel(): string {
     if (this.aiDifficulty === 1) return 'Fácil';
-    if (this.aiDifficulty === 3) return 'Difícil';
+  if (this.aiDifficulty === 3) return 'Difícil';
+  if (this.aiDifficulty === 4) return 'Muy difícil';
     return 'Medio';
   }
 
@@ -43,7 +44,7 @@ export class HeaderGameComponent {
 
     const n = Number(value);
     if (!isNaN(n)) {
-      const d = Math.max(1, Math.min(3, Math.floor(n))) as AiDifficulty;
+      const d = Math.max(1, Math.min(4, Math.floor(n))) as AiDifficulty;
       this.changeDifficulty.emit(d);
     }
   }

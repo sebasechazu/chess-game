@@ -1,112 +1,71 @@
-<div class="p-2 rounded-lg bg-slate-100" 
-  [class.h-full]="isVertical" 
-  [class.p-4]="isVertical"
+<div class="p-2 rounded-lg bg-slate-100" [class.h-full]="isVertical" [class.p-4]="isVertical"
   [class.bg-transparent]="isVertical">
-  
-  <div class="flex h-full" 
-    [class.flex-col]="true" 
-    [class.items-center]="isVertical"
-    [class.justify-between]="isVertical"
-    [class.gap-2]="!isVertical"
-    [class.gap-6]="isVertical">
 
-    <!-- Banner de Jaque (prominente, tono violeta) -->
-    @if (checkWarning.show) {
-      <div class="w-full mb-3">
-  <div class="flex items-center justify-center gap-2 bg-violet-600 text-white text-center text-sm font-bold py-2 px-3 rounded-lg shadow-md"
-       [class.ring-2]="checkProminent"
-  [style.boxShadow]="checkProminent ? '0 0 0 6px rgba(196,181,253,0.3)' : null"
-       [class.animate-pulse]="checkProminent">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 12c0 4.9706-4.0294 9-9 9s-9-4.0294-9-9 4.0294-9 9-9 9 4.0294 9 9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>{{ checkWarning.text }}</span>
-        </div>
-        @if (suggestionText) {
-          <div class="mt-2 rounded-md p-2 text-center" [class.text-xs]="!isVertical" [class.text-sm]="isVertical" [class.bg-violet-100]="true" [class.text-violet-700]="true">
-            {{ suggestionText }}
-          </div>
-        }
-      </div>
-    }
+  <div class="flex h-full" [class.flex-col]="true" [class.items-center]="isVertical"
+    [class.justify-between]="isVertical" [class.gap-2]="!isVertical" [class.gap-6]="isVertical">
+
     
-    <!-- Información del turno -->
-    <div class="text-center flex-shrink-0">
-      <div class="text-sm font-bold mb-1" [class.text-lg]="isVertical" [class.mb-3]="isVertical">
+
+    <!-- Información del turno: siempre en fila y centrado en su contenedor -->
+    <div class="flex items-center gap-3 text-center flex-shrink-0 justify-center w-full sm:w-auto mx-auto">
+      <div class="text-sm font-bold">
         Turno Actual
       </div>
-      <div [class.text-white]="currentTurn === PieceColor.White" 
-           [class.text-black]="currentTurn === PieceColor.Black"
-           [class.bg-gray-800]="currentTurn === PieceColor.White" 
-           [class.bg-gray-200]="currentTurn === PieceColor.Black"
-           class="py-1 px-3 rounded-md inline-block text-sm font-semibold"
-           [class.py-2]="isVertical"
-           [class.px-4]="isVertical"
-           [class.text-base]="isVertical"
-           [class.rounded-lg]="isVertical">
+
+      <div [class.text-white]="currentTurn === PieceColor.White" [class.text-black]="currentTurn === PieceColor.Black"
+        [class.bg-gray-800]="currentTurn === PieceColor.White" [class.bg-gray-200]="currentTurn === PieceColor.Black"
+        class="py-1 px-3 rounded-md inline-flex text-sm font-semibold items-center justify-center">
         {{ currentTurn === PieceColor.White ? 'Blancas' : 'Negras' }}
       </div>
     </div>
 
     <!-- Estadísticas -->
     <div class="flex-1 w-full min-w-0" [class.my-4]="isVertical">
-      <div class="grid gap-1" 
-        [class.grid-cols-3]="!isVertical"
-        [class.grid-cols-1]="isVertical"
-        [class.gap-3]="isVertical"
-        [class]="statsAnimationClass">
-        
-        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
-             [class.p-3]="isVertical"
-             [class.rounded-lg]="isVertical">
+      <div class="grid gap-1" [class.grid-cols-3]="!isVertical" [class.grid-cols-1]="isVertical"
+        [class.gap-3]="isVertical" [class]="statsAnimationClass">
+
+        <div class="bg-white p-1 rounded-md shadow-sm text-center border" [class.p-3]="isVertical"
+          [class.rounded-lg]="isVertical">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
-            <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight"
-                 [class.tracking-wide]="isVertical"
-                 [class.leading-normal]="isVertical">
+            <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight" [class.tracking-wide]="isVertical"
+              [class.leading-normal]="isVertical">
               Movimientos
             </div>
 
-            <div class="text-sm font-bold text-blue-600 leading-tight mt-1 sm:mt-0"
-                 [class.text-xl]="isVertical"
-                 [class.leading-normal]="isVertical">
+            <div class="text-sm font-bold text-blue-600 leading-tight mt-1 sm:mt-0" [class.text-xl]="isVertical"
+              [class.leading-normal]="isVertical">
               {{ totalMovements }}
             </div>
           </div>
         </div>
-        
-        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
-             [class.p-3]="isVertical"
-             [class.rounded-lg]="isVertical">
+
+        <div class="bg-white p-1 rounded-md shadow-sm text-center border" [class.p-3]="isVertical"
+          [class.rounded-lg]="isVertical">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
-            <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
-                 [class.tracking-wide]="isVertical"
-                 [class.leading-normal]="isVertical">
+            <div
+              class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
+              [class.tracking-wide]="isVertical" [class.leading-normal]="isVertical">
               Capturas Blancas
             </div>
 
-            <div class="text-sm font-bold text-green-600 leading-tight mt-1 sm:mt-0"
-                 [class.text-xl]="isVertical"
-                 [class.leading-normal]="isVertical">
+            <div class="text-sm font-bold text-green-600 leading-tight mt-1 sm:mt-0" [class.text-xl]="isVertical"
+              [class.leading-normal]="isVertical">
               {{ whiteCaptures }}
             </div>
           </div>
         </div>
-        
-        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
-             [class.p-3]="isVertical"
-             [class.rounded-lg]="isVertical">
+
+        <div class="bg-white p-1 rounded-md shadow-sm text-center border" [class.p-3]="isVertical"
+          [class.rounded-lg]="isVertical">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
-            <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
-                 [class.tracking-wide]="isVertical"
-                 [class.leading-normal]="isVertical">
+            <div
+              class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
+              [class.tracking-wide]="isVertical" [class.leading-normal]="isVertical">
               Capturas Negras
             </div>
 
-            <div class="text-sm font-bold text-red-600 leading-tight mt-1 sm:mt-0"
-                 [class.text-xl]="isVertical"
-                 [class.leading-normal]="isVertical">
+            <div class="text-sm font-bold text-red-600 leading-tight mt-1 sm:mt-0" [class.text-xl]="isVertical"
+              [class.leading-normal]="isVertical">
               {{ blackCaptures }}
             </div>
           </div>
@@ -114,62 +73,90 @@
       </div>
     </div>
 
+    <!-- Banner de Jaque (prominente, tono violeta) -->
+    @if (checkWarning.show) {
+    <div class="w-full mb-3">
+      <div
+        class="flex items-center justify-center gap-2 bg-violet-600 text-white text-center text-sm font-bold py-2 px-3 rounded-lg shadow-md"
+        [class.ring-2]="checkProminent" [style.boxShadow]="checkProminent ? '0 0 0 6px rgba(196,181,253,0.3)' : null"
+        [class.animate-pulse]="checkProminent">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M21 12c0 4.9706-4.0294 9-9 9s-9-4.0294-9-9 4.0294-9 9-9 9 4.0294 9 9z" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span>{{ checkWarning.text }}</span>
+      </div>
+      @if (suggestionText) {
+      <div class="mt-2 rounded-md p-2 text-center" [class.text-xs]="!isVertical" [class.text-sm]="isVertical"
+        [class.bg-violet-100]="true" [class.text-violet-700]="true">
+        {{ suggestionText }}
+      </div>
+      }
+    </div>
+    }
+
     <!-- Botones -->
     <div class="flex-shrink-0" [class.w-full]="isVertical" [class.mt-auto]="isVertical">
-  <div class="grid gap-2" 
-       [class.grid-cols-3]="!isVertical"
-       [class.grid-cols-1]="isVertical">
+      <div class="grid gap-2" [class.grid-cols-3]="!isVertical" [class.grid-cols-1]="isVertical">
         <!-- Toggle IA -->
-        <button (click)="onToggleAi()"
-          [class.bg-green-500]="aiEnabled"
-          [class.hover:bg-green-600]="aiEnabled" 
-          [class.bg-gray-500]="!aiEnabled"
-          [class.hover:bg-gray-600]="!aiEnabled"
-          class="text-white font-bold py-2 px-3 rounded-lg transition-colors shadow-sm"
-          [class.w-full]="isVertical"
+        <button (click)="onToggleAi()" [class.bg-green-500]="aiEnabled" [class.hover:bg-green-600]="aiEnabled"
+          [class.bg-gray-500]="!aiEnabled" [class.hover:bg-gray-600]="!aiEnabled"
+          class="text-white font-bold py-2 px-3 rounded-lg transition-colors shadow-sm" [class.w-full]="isVertical"
           [class.shadow-md]="isVertical">
           <span class="text-sm flex items-center justify-center gap-1">
             @if (aiEnabled) {
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C13.1046 2 14 2.89543 14 4V6H16C17.1046 6 18 6.89543 18 8V10C18 11.1046 17.1046 12 16 12H14V14C14 15.1046 13.1046 16 12 16C10.8954 16 10 15.1046 10 14V12H8C6.89543 12 6 11.1046 6 10V8C6 6.89543 6.89543 6 8 6H10V4C10 2.89543 10.8954 2 12 2Z" fill="currentColor"/>
-                <circle cx="8" cy="8" r="1" fill="white"/>
-                <circle cx="16" cy="8" r="1" fill="white"/>
-                <path d="M12 18C12 19.1046 12.8954 20 14 20H18C19.1046 20 20 20.8954 20 22H4C4 20.8954 4.89543 20 6 20H10C11.1046 20 12 19.1046 12 18Z" fill="currentColor"/>
-              </svg>
-              IA ACTIVADA
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12 2C13.1046 2 14 2.89543 14 4V6H16C17.1046 6 18 6.89543 18 8V10C18 11.1046 17.1046 12 16 12H14V14C14 15.1046 13.1046 16 12 16C10.8954 16 10 15.1046 10 14V12H8C6.89543 12 6 11.1046 6 10V8C6 6.89543 6.89543 6 8 6H10V4C10 2.89543 10.8954 2 12 2Z"
+                fill="currentColor" />
+              <circle cx="8" cy="8" r="1" fill="white" />
+              <circle cx="16" cy="8" r="1" fill="white" />
+              <path
+                d="M12 18C12 19.1046 12.8954 20 14 20H18C19.1046 20 20 20.8954 20 22H4C4 20.8954 4.89543 20 6 20H10C11.1046 20 12 19.1046 12 18Z"
+                fill="currentColor" />
+            </svg>
+            IA ACTIVADA
             } @else {
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 7V17C3 18.1046 3.89543 19 5 19H11V21H7V23H17V21H13V19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" stroke-width="2" fill="none"/>
-                <circle cx="12" cy="12" r="2" fill="currentColor"/>
-              </svg>
-              IA DESACTIVADA
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M3 7V17C3 18.1046 3.89543 19 5 19H11V21H7V23H17V21H13V19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7Z"
+                stroke="currentColor" stroke-width="2" fill="none" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
+            </svg>
+            IA DESACTIVADA
             }
           </span>
         </button>
-        
+
         <!-- Selector Dificultad IA (estilo consistente con botones) -->
         <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
           <!-- Label fijo: 'Nivel de IA' -->
           <label for="ai-difficulty-select" class="text-sm font-semibold text-gray-700 self-center">Nivel de IA</label>
 
           <div class="w-full sm:w-auto">
-            <select id="ai-difficulty-select" [value]="aiDifficulty" (change)="onDifficultyChange($any($event.target).value)"
-                    class="bg-white border-1 rounded-lg py-2 px-3 text-sm font-bold shadow-sm w-full text-center hover:bg-gray-100 focus:outline-none">
+            <select id="ai-difficulty-select" [value]="aiDifficulty"
+              (change)="onDifficultyChange($any($event.target).value)"
+              class="bg-white border-1 rounded-lg py-2 px-3 text-sm font-bold shadow-sm w-full text-center hover:bg-gray-100 focus:outline-none">
               <option value="1">Fácil</option>
               <option value="2">Medio</option>
               <option value="3">Difícil</option>
+              <option value="4">Muy difícil</option>
             </select>
           </div>
         </div>
 
-        <button (click)="onReset()" 
+        <button (click)="onReset()"
           class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition-colors shadow-sm"
-          [class.w-full]="isVertical"
-          [class.shadow-md]="isVertical">
+          [class.w-full]="isVertical" [class.shadow-md]="isVertical">
           <span class="text-sm flex items-center justify-center gap-1">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.25022 4 6.82447 5.38734 5.38451 7.50024" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M8 8L5.38451 7.50024L5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.25022 4 6.82447 5.38734 5.38451 7.50024"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <path d="M8 8L5.38451 7.50024L5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
             REINICIAR
           </span>
