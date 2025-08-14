@@ -64,6 +64,8 @@ export class ChessService {
   public readonly whiteCaptures: WritableSignal<number> = signal<number>(0);
   public readonly blackCaptures: WritableSignal<number> = signal<number>(0);
   public readonly aiEnabled: WritableSignal<boolean> = signal<boolean>(true);
+  // Dificultad de la IA: 1 = easy, 2 = medium, 3 = hard
+  public readonly aiDifficulty: WritableSignal<number> = signal<number>(2);
 
   /** 
    * Datos reactivos para el modal de victoria 
@@ -563,6 +565,7 @@ export class ChessService {
    * @returns Mejor movimiento encontrado o null si no hay movimientos válidos
    */
   private findBestMoveForAi(board: ChessSquare[][]): AiMove | null {
+    const difficulty = this.aiDifficulty();
     const blackPieces = getAllPiecesForColor(board, PieceColor.Black);
     const possibleMoves: AiMove[] = [];
 
@@ -570,15 +573,46 @@ export class ChessService {
       const validMoves = this.getValidMovesForPieceWithRules(board, piecePos);
 
       for (const targetPos of validMoves) {
-        const score = this.evaluateMove(board, piecePos, targetPos);
-        possibleMoves.push({ from: piecePos, to: targetPos, score });
+        const baseScore = this.evaluateMove(board, piecePos, targetPos);
+        possibleMoves.push({ from: piecePos, to: targetPos, score: baseScore });
       }
     }
 
     if (possibleMoves.length === 0) return null;
 
+    // Ordenar por score base
     possibleMoves.sort((a, b) => b.score - a.score);
-    return possibleMoves[0];
+
+    if (difficulty === 1) {
+      // Easy: elegir entre los mejores N con alto componente aleatorio
+      const topN = Math.max(1, Math.floor(possibleMoves.length * 0.2));
+      const slice = possibleMoves.slice(0, topN);
+      return slice[Math.floor(Math.random() * slice.length)];
+    }
+
+    if (difficulty === 2) {
+      // Medium: elegir el mejor según heurística, poca aleatoriedad
+      // ya están ordenados
+      return possibleMoves[0];
+    }
+
+    // Hard: usar minimax a profundidad 2 para mirar respuesta del rival
+    let bestMove: AiMove | null = null;
+    let bestScore = -Infinity;
+    const depth = 2; // búsqueda a 2 plies (IA->oponente)
+
+    for (const m of possibleMoves) {
+      const nb = this.simulateMove(board, m.from, m.to);
+      const score = this.minimaxEvaluate(nb, depth - 1, false);
+      // pequeña sutilización con heurística previa
+      const finalScore = score + m.score * 0.1;
+      if (finalScore > bestScore) {
+        bestScore = finalScore;
+        bestMove = { ...m, score: finalScore };
+      }
+    }
+
+    return bestMove || possibleMoves[0];
   }
 
   /**
@@ -637,6 +671,24 @@ export class ChessService {
   }
 
   /**
+   * Establece la dificultad de la IA: 'easy' | 'medium' | 'hard' o número 1..3
+   * @param level - Nivel de dificultad
+   */
+  public setAiDifficulty(level: 'easy' | 'medium' | 'hard' | number): void {
+    let val = 2;
+    if (typeof level === 'number') {
+      val = Math.max(1, Math.min(3, Math.floor(level)));
+    } else {
+      if (level === 'easy') val = 1;
+      else if (level === 'medium') val = 2;
+      else if (level === 'hard') val = 3;
+    }
+    this.aiDifficulty.set(val);
+    // Limpiar cache cuando cambie dificultad
+    this.aiMovesCache.clear();
+  }
+
+  /**
    * Evalúa la calidad de un movimiento con heurísticas mejoradas
    * @param board - Tablero actual
    * @param from - Posición de origen
@@ -673,5 +725,81 @@ export class ChessService {
     score += Math.random() * 0.5;
 
     return score;
+  }
+
+  /**
+   * Simula un movimiento y devuelve un nuevo tablero clonado con el movimiento aplicado
+   * @param board - Tablero actual
+   * @param from - Posición de origen
+   * @param to - Posición de destino
+   * @returns Nuevo tablero con el movimiento simulado
+   */
+  private simulateMove(board: ChessSquare[][], from: Position, to: Position): ChessSquare[][] {
+    const newBoard = deepCloneBoard(board);
+    const fromSq = getSquareAtPosition(newBoard, from);
+    const toSq = getSquareAtPosition(newBoard, to);
+    if (!fromSq || !toSq || !fromSq.piece) return newBoard;
+
+    toSq.piece = { ...fromSq.piece, position: to };
+    fromSq.piece = null;
+    return newBoard;
+  }
+
+  /**
+   * Minimax simplificado (sin poda alpha-beta) para profundidad corta.
+   * Devuelve la puntuación heurística del tablero desde la perspectiva de las negras (IA).
+   * @param board - Tablero actual
+   * @param depth - Profundidad de búsqueda
+   * @param maximizingPlayer - Indica si es el turno del jugador maximizar (negras)
+   * @returns Puntuación heurística del tablero
+   */
+  private minimaxEvaluate(board: ChessSquare[][], depth: number, maximizingPlayer: boolean): number {
+    if (depth === 0) {
+      let total = 0;
+      for (const row of board) {
+        for (const sq of row) {
+          if (!sq.piece) continue;
+          const val = getPieceValue(sq.piece.type);
+          total += sq.piece.color === PieceColor.Black ? val : -val;
+        }
+      }
+      return total;
+    }
+
+    if (maximizingPlayer) {
+      const moves: AiMove[] = [];
+      const pieces = getAllPiecesForColor(board, PieceColor.Black);
+      for (const p of pieces) {
+        const targets = this.getValidMovesForPieceWithRules(board, p);
+        for (const t of targets) moves.push({ from: p, to: t, score: 0 });
+      }
+
+      if (moves.length === 0) return this.minimaxEvaluate(board, 0, false);
+
+      let best = -Infinity;
+      for (const m of moves) {
+        const nb = this.simulateMove(board, m.from, m.to);
+        const val = this.minimaxEvaluate(nb, depth - 1, false);
+        if (val > best) best = val;
+      }
+      return best;
+    } else {
+      const moves: AiMove[] = [];
+      const pieces = getAllPiecesForColor(board, PieceColor.White);
+      for (const p of pieces) {
+        const targets = this.getValidMovesForPieceWithRules(board, p);
+        for (const t of targets) moves.push({ from: p, to: t, score: 0 });
+      }
+
+      if (moves.length === 0) return this.minimaxEvaluate(board, 0, true);
+
+      let best = Infinity;
+      for (const m of moves) {
+        const nb = this.simulateMove(board, m.from, m.to);
+        const val = this.minimaxEvaluate(nb, depth - 1, true);
+        if (val < best) best = val;
+      }
+      return best;
+    }
   }
 }

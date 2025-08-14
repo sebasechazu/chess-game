@@ -12,8 +12,11 @@
         [whiteCaptures]="chessService.whiteCaptures()"
         [blackCaptures]="chessService.blackCaptures()"
         [aiEnabled]="chessService.aiEnabled()"
+        [aiDifficulty]="chessService.aiDifficulty()"
         [onReset]="onReset.bind(this)"
-        (toggleAi)="onToggleAi($event)" />
+        (toggleAi)="onToggleAi($event)"
+        (changeDifficulty)="onChangeDifficulty($event)" />
+        
 
       <div class="w-full flex-1 flex justify-center items-center min-h-0">
         <div class="aspect-square w-full max-w-sm flex items-center justify-center">
@@ -39,9 +42,11 @@
             [whiteCaptures]="chessService.whiteCaptures()"
             [blackCaptures]="chessService.blackCaptures()"
             [aiEnabled]="chessService.aiEnabled()"
+            [aiDifficulty]="chessService.aiDifficulty()"
             [onReset]="onReset.bind(this)"
             [isVertical]="true"
-            (toggleAi)="onToggleAi($event)" />
+            (toggleAi)="onToggleAi($event)"
+            (changeDifficulty)="onChangeDifficulty($event)" />
         </div>
       </div>
 

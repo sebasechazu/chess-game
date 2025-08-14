@@ -38,6 +38,10 @@ export class ChessGameComponent {
     this.chessService.initializeGame();
   }
 
+  onChangeDifficulty(level: 'easy' | 'medium' | 'hard' | number): void {
+    this.chessService.setAiDifficulty(level);
+  }
+
   /**
    * Reinicia el juego a su estado inicial
    */

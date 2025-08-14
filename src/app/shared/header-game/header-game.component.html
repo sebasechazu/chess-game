@@ -93,9 +93,9 @@
 
     <!-- Botones -->
     <div class="flex-shrink-0" [class.w-full]="isVertical" [class.mt-auto]="isVertical">
-      <div class="grid gap-2" 
-           [class.grid-cols-2]="!isVertical"
-           [class.grid-cols-1]="isVertical">
+  <div class="grid gap-2" 
+       [class.grid-cols-3]="!isVertical"
+       [class.grid-cols-1]="isVertical">
         <!-- Toggle IA -->
         <button (click)="onToggleAi()"
           [class.bg-green-500]="aiEnabled"
@@ -124,6 +124,17 @@
           </span>
         </button>
         
+        <!-- Selector Dificultad IA (estilo consistente con botones) -->
+        <div class="flex items-center justify-center">
+          <label class="sr-only">Dificultad IA</label>
+          <select [value]="aiDifficulty" (change)="onDifficultyChange($any($event.target).value)"
+                  class="bg-white border-1 rounded-lg py-2 px-3 text-sm font-bold shadow-sm w-full text-center hover:bg-gray-100 focus:outline-none">
+            <option value="1">Fácil</option>
+            <option value="2">Medio</option>
+            <option value="3">Difícil</option>
+          </select>
+        </div>
+
         <button (click)="onReset()" 
           class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition-colors shadow-sm"
           [class.w-full]="isVertical"
