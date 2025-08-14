@@ -1,84 +1,66 @@
 <div class="w-screen h-screen flex flex-col items-center justify-center bg-gray-100 overflow-hidden">
   @if (chessService.isLoading()) {
-    <app-spinner-game />
+  <app-spinner-game />
   }
 
   @if (!chessService.isLoading() && chessService.gameInitialized()) {
-    <!-- Layout móvil -->
-  <div class="w-full max-w-4xl flex flex-col gap-1 items-center justify-center px-2 py-2 md:hidden h-full overflow-auto">
-      <app-header-game class="w-full flex-shrink-0"
-        [currentTurn]="chessService.currentTurn()"
-        [totalMovements]="chessService.totalMovements()"
-        [whiteCaptures]="chessService.whiteCaptures()"
-        [blackCaptures]="chessService.blackCaptures()"
-        [aiEnabled]="chessService.aiEnabled()"
-        [aiDifficulty]="chessService.aiDifficulty()"
-  [whiteInCheck]="chessService.whiteInCheck()"
-  [blackInCheck]="chessService.blackInCheck()"
-        [onReset]="onReset.bind(this)"
-        (toggleAi)="onToggleAi($event)"
-        (changeDifficulty)="onChangeDifficulty($event)" />
-        
+  <!-- Layout móvil -->
+  <div
+    class="w-full max-w-4xl flex flex-col gap-1 items-center justify-center px-2 py-2 md:hidden h-full overflow-auto">
+    <app-header-game class="w-full flex-shrink-0" [currentTurn]="chessService.currentTurn()"
+      [totalMovements]="chessService.totalMovements()" [whiteCaptures]="chessService.whiteCaptures()"
+      [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
+      [aiEnabled]="chessService.aiEnabled()" [aiDifficulty]="chessService.aiDifficulty()"
+      [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
+      [onReset]="onReset.bind(this)" (toggleAi)="onToggleAi($event)" (changeDifficulty)="onChangeDifficulty($event)"
+      (clearHistory)="chessService.clearScoreHistory()" />
 
-      <div class="w-full flex-1 flex justify-center items-center min-h-0">
-        <div class="aspect-square w-full max-w-sm flex items-center justify-center">
-          <app-chess-board class="w-full h-full"
-            [board]="chessService.board()"
-            [currentTurn]="chessService.currentTurn()"
-            [gameOver]="chessService.gameOver()"
-            [validateMove]="validateMove.bind(this)"
-            (moveAttempt)="onMoveAttempt($event)" />
-        </div>
-      </div>
 
-    </div>
-
-    <!-- Layout escritorio -->
-    <div class="hidden md:flex w-full h-full gap-4 px-4 py-4">
-      <!-- Header vertical a la izquierda -->
-      <div class="w-64 flex-shrink-0 border-r-2 border-slate-300 pr-4">
-        <div class="bg-slate-50 rounded-lg shadow-sm border h-full">
-          <app-header-game class="w-full h-full"
-            [currentTurn]="chessService.currentTurn()"
-            [totalMovements]="chessService.totalMovements()"
-            [whiteCaptures]="chessService.whiteCaptures()"
-            [blackCaptures]="chessService.blackCaptures()"
-            [aiEnabled]="chessService.aiEnabled()"
-            [aiDifficulty]="chessService.aiDifficulty()"
-            [whiteInCheck]="chessService.whiteInCheck()"
-            [blackInCheck]="chessService.blackInCheck()"
-            [onReset]="onReset.bind(this)"
-            [isVertical]="true"
-            (toggleAi)="onToggleAi($event)"
-            (changeDifficulty)="onChangeDifficulty($event)" />
-        </div>
-      </div>
-
-      <!-- Tablero en el centro -->
-      <div class="flex-1 flex items-center justify-center px-8">
-        <div class="aspect-square w-full max-w-3xl bg-white rounded-lg shadow-lg border-2 border-slate-200 p-4">
-          <app-chess-board class="w-full h-full"
-            [board]="chessService.board()"
-            [currentTurn]="chessService.currentTurn()"
-            [gameOver]="chessService.gameOver()"
-            [validateMove]="validateMove.bind(this)"
-            (moveAttempt)="onMoveAttempt($event)" />
-        </div>
-      </div>
-
-      <!-- Historial vertical a la derecha -->
-      <div class="w-64 flex-shrink-0 border-l-2 border-slate-300 pl-4">
-        <div class="bg-slate-50 rounded-lg shadow-sm border h-full">
-          <app-history-game class="w-full h-full" 
-            [moveHistory]="chessService.moveHistory()"
-            [isVertical]="true" />
-        </div>
+    <div class="w-full flex-1 flex justify-center items-center min-h-0">
+      <div class="aspect-square w-full max-w-sm flex items-center justify-center">
+        <app-chess-board class="w-full h-full" [board]="chessService.board()" [currentTurn]="chessService.currentTurn()"
+          [gameOver]="chessService.gameOver()" [validateMove]="validateMove.bind(this)"
+          (moveAttempt)="onMoveAttempt($event)" />
       </div>
     </div>
+
+  </div>
+
+  <!-- Layout escritorio -->
+  <div class="hidden md:flex w-full h-full gap-4 px-4 py-4">
+    <!-- Header vertical a la izquierda -->
+    <div class="w-64 flex-shrink-0 border-r-2 border-slate-300 pr-4">
+      <div class="bg-slate-50 rounded-lg shadow-sm border h-full">
+        <app-header-game class="w-full h-full" [currentTurn]="chessService.currentTurn()"
+          [totalMovements]="chessService.totalMovements()" [whiteCaptures]="chessService.whiteCaptures()"
+          [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
+          [aiEnabled]="chessService.aiEnabled()" [aiDifficulty]="chessService.aiDifficulty()"
+          [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
+          [onReset]="onReset.bind(this)" [isVertical]="true" (toggleAi)="onToggleAi($event)"
+          (changeDifficulty)="onChangeDifficulty($event)" (clearHistory)="chessService.clearScoreHistory()" />
+      </div>
+    </div>
+
+    <!-- Tablero en el centro -->
+    <div class="flex-1 flex items-center justify-center px-8">
+      <div class="aspect-square w-full max-w-3xl bg-white rounded-lg shadow-lg border-2 border-slate-200 p-4">
+        <app-chess-board class="w-full h-full" [board]="chessService.board()" [currentTurn]="chessService.currentTurn()"
+          [gameOver]="chessService.gameOver()" [validateMove]="validateMove.bind(this)"
+          (moveAttempt)="onMoveAttempt($event)" />
+      </div>
+    </div>
+
+    <!-- Historial vertical a la derecha -->
+    <div class="w-64 flex-shrink-0 border-l-2 border-slate-300 pl-4">
+      <div class="bg-slate-50 rounded-lg shadow-sm border h-full">
+        <app-history-game class="w-full h-full" [moveHistory]="chessService.moveHistory()" [isVertical]="true" />
+      </div>
+    </div>
+  </div>
   }
 
   @if (chessService.victoryModalData().open) {
-    <app-modal-game [modalData]="chessService.victoryModalData()"
-      (closeModal)="chessService.showVictoryModal.set(false)" />
+  <app-modal-game [modalData]="chessService.victoryModalData()"
+    (closeModal)="chessService.showVictoryModal.set(false)" />
   }
 </div>

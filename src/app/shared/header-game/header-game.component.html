@@ -27,24 +27,72 @@
         </button>
 
         @if (showScoreDropdown) {
-        <div class="absolute left-0 mt-2 w-56 bg-white border rounded-md shadow-lg z-50">
-          <div class="p-2 text-xs text-gray-500">Historial de puntajes</div>
-          <div class="max-h-48 overflow-auto">
-            @if (!scoreHistory || scoreHistory.length === 0) {
-              <div class="p-3 text-center text-sm text-gray-500">Sin puntajes aún</div>
-            } @else {
-              @for (s of scoreHistory; track $index) {
-                <div class="p-2 hover:bg-gray-50 border-t last:border-b">
-                  <div class="flex justify-between items-center">
-                    <div class="text-sm font-medium text-gray-800">{{ s.score }}</div>
-                    <div class="text-xs text-gray-500">{{ s.winner === 'white' ? 'B' : s.winner === 'black' ? 'N' : '-' }}</div>
+          @if (isVertical) {
+              <div class="absolute left-full ml-2 mt-2 w-64 bg-white border rounded-lg shadow-xl z-50 origin-top-left overflow-hidden">
+              <div class="p-2 text-xs text-gray-500">Historial de puntajes</div>
+              <div class="max-h-56 overflow-auto px-1">
+                @if (!scoreHistory || scoreHistory.length === 0) {
+                  <div class="p-3 text-center text-sm text-gray-500">Sin puntajes aún</div>
+                } @else {
+                  <div class="space-y-1">
+                    @for (s of scoreHistory; track $index) {
+                    <div class="flex items-center justify-between p-2 bg-white rounded-md shadow-sm border hover:shadow-md hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 flex items-center justify-center rounded-full border" [class.bg-black]="s.winner === 'black'" [class.bg-white]="s.winner === 'white'">
+                          <div class="w-4 h-4 rounded-full" [class.bg-white]="s.winner === 'black'" [class.bg-black]="s.winner === 'white'"></div>
+                        </div>
+
+                          <div class="flex flex-col min-w-0">
+                            <div class="text-lg font-bold text-blue-600 truncate">{{ s.score }}</div>
+                          <div class="text-xs text-gray-500 truncate">{{ s.winner === 'white' ? 'Blancas' : s.winner === 'black' ? 'Negras' : 'Empate' }} · {{ s.moves }} mov · D{{ s.difficulty }}</div>
+                          </div>
+                        </div>
+
+                      <div class="text-xs text-gray-400 ml-3">{{ s.date | date:'dd/MM HH:mm' }}</div>
+                      </div>
+                    }
                   </div>
-                  <div class="text-xs text-gray-400">{{ s.moves }} mov · {{ s.difficulty }} · {{ s.date }}</div>
-                </div>
-              }
-            }
-          </div>
-        </div>
+                }
+              </div>
+              <div class="p-2 border-t bg-gray-50 flex items-center justify-between">
+                <div class="text-xs text-gray-500">Total: {{ scoreHistory.length || 0 }}</div>
+                <button (click)="clearHistory.emit()" class="text-xs text-red-600 hover:underline">Limpiar</button>
+              </div>
+            </div>
+          } @else {
+            <!-- Versión móvil: con el HTML exactamente como estaba (sin modificar) -->
+            <div class="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-xl z-50 origin-top-right overflow-hidden">
+              <div class="p-2 text-xs text-gray-500">Historial de puntajes</div>
+              <div class="max-h-56 overflow-auto px-1">
+                @if (!scoreHistory || scoreHistory.length === 0) {
+                  <div class="p-3 text-center text-sm text-gray-500">Sin puntajes aún</div>
+                } @else {
+                  <div class="space-y-1">
+                    @for (s of scoreHistory; track $index) {
+                    <div class="flex items-center justify-between p-2 bg-white rounded-md shadow-sm border hover:shadow-md hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 flex items-center justify-center rounded-full border" [class.bg-black]="s.winner === 'black'" [class.bg-white]="s.winner === 'white'">
+                          <div class="w-4 h-4 rounded-full" [class.bg-white]="s.winner === 'black'" [class.bg-black]="s.winner === 'white'"></div>
+                        </div>
+
+                          <div class="flex flex-col min-w-0">
+                            <div class="text-lg font-bold text-blue-600 truncate">{{ s.score }}</div>
+                          <div class="text-xs text-gray-500 truncate">{{ s.winner === 'white' ? 'Blancas' : s.winner === 'black' ? 'Negras' : 'Empate' }} · {{ s.moves }} mov · D{{ s.difficulty }}</div>
+                          </div>
+                        </div>
+
+                      <div class="text-xs text-gray-400 ml-3">{{ s.date | date:'dd/MM HH:mm' }}</div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="p-2 border-t bg-gray-50 flex items-center justify-between">
+                <div class="text-xs text-gray-500">Total: {{ scoreHistory.length || 0 }}</div>
+                <button (click)="clearHistory.emit()" class="text-xs text-red-600 hover:underline">Limpiar</button>
+              </div>
+            </div>
+          }
         }
 
       </div>

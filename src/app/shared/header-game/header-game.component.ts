@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { PieceColor, AiDifficulty } from '../../helpers/interfaces';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -93,15 +93,37 @@ export class HeaderGameComponent {
   
   @Output() toggleAi = new EventEmitter<boolean>();
   @Output() changeDifficulty = new EventEmitter<'easy' | 'medium' | 'hard' | AiDifficulty>();
+  @Output() clearHistory = new EventEmitter<void>();
 
   // Hacer disponible el enum en el template
   readonly PieceColor = PieceColor;
 
   // Estado local UI para desplegable de historial de puntajes
   public showScoreDropdown: boolean = false;
+  // Posición calculada del dropdown: 'left' -> use right-0 (abre a la izquierda del botón),
+  // 'right' -> use left-full (abre a la derecha del botón)
+  public dropdownPosition: 'left' | 'right' = 'left';
+
+  @ViewChild('scoreBtn', { static: false }) scoreBtn?: ElementRef<HTMLElement>;
 
   toggleScoreDropdown(): void {
     this.showScoreDropdown = !this.showScoreDropdown;
+    // Solo calcular la posición dinámica en layout vertical (escritorio)
+    if (this.showScoreDropdown && this.isVertical) {
+      // Calcular en el siguiente tick para que el DOM esté disponible
+      setTimeout(() => {
+        try {
+          const rect = this.scoreBtn?.nativeElement.getBoundingClientRect();
+          const dropdownWidth = 256; // approx w-64 (16 * 16)
+          const spaceRight = window.innerWidth - (rect?.right ?? 0);
+          // si hay suficiente espacio a la derecha, abrimos hacia la derecha
+          this.dropdownPosition = (spaceRight > dropdownWidth + 12) ? 'right' : 'left';
+        } catch (e) {
+          // en caso de error no bloqueamos la UI
+          this.dropdownPosition = 'left';
+        }
+      }, 0);
+    }
   }
 
   getDifficultyLabel(): string {

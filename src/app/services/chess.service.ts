@@ -146,6 +146,8 @@ export class ChessService {
       }
     });
 
+  // -- end constructor
+
     effect(() => {
       const currentBoard = this.board();
       if (!this.gameInitialized() || currentBoard.length === 0) return;
@@ -167,6 +169,18 @@ export class ChessService {
         this.scheduleAiMove();
       }
     });
+  }
+
+  /**
+   * Borra el historial de puntajes (memoria + localStorage)
+   */
+  public clearScoreHistory(): void {
+    this.scoreHistory.set([]);
+    try {
+      localStorage.removeItem(this.SCORE_HISTORY_KEY);
+    } catch (e) {
+      // ignore
+    }
   }
 
   /**
