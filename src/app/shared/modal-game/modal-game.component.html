@@ -37,6 +37,14 @@
         <p class="text-center text-lg font-medium mb-4">{{ modalData.content }}</p>
       }
       <ng-content></ng-content>
+
+      <!-- Mostrar puntaje si está disponible -->
+      @if (modalData.score !== undefined) {
+      <div class="mt-4 bg-gray-50 p-3 rounded-lg text-center border">
+        <div class="text-xs text-gray-500 uppercase">Puntaje final</div>
+        <div class="text-2xl font-extrabold text-blue-600">{{ modalData.score }}</div>
+      </div>
+      }
     </div>
   </div>
 </div>

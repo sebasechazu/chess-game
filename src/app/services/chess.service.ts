@@ -60,6 +60,16 @@ export class ChessService {
   public readonly isLoading: WritableSignal<boolean> = signal<boolean>(true);
 
   /**
+   * Puntaje de la última partida (se muestra en el modal de finalización)
+   */
+  public readonly lastGameScore: WritableSignal<number> = signal<number>(0);
+
+  /**
+   * Historial de puntajes (más reciente primero)
+   */
+  public readonly scoreHistory: WritableSignal<import('../helpers/interfaces').ScoreEntry[]> = signal<import('../helpers/interfaces').ScoreEntry[]>([]);
+
+  /**
    * Historial de movimientos realizados
    */
   public readonly moveHistory: WritableSignal<string[]> = signal<string[]>([]);
@@ -79,18 +89,20 @@ export class ChessService {
     }
 
     const winner = this.winnerColor();
+    const score = this.lastGameScore();
     let content = 'Partida en tablas';
 
     if (winner === PieceColor.White) {
-      content = '¡Ganan las blancas!';
+      content = `¡Ganan las blancas! Puntaje: ${score}`;
     } else if (winner === PieceColor.Black) {
-      content = '¡Ganan las negras!';
+      content = `¡Ganan las negras! Puntaje: ${score}`;
     }
 
     return {
       open: true,
       title: '🏆 ¡Partida finalizada!',
-      content
+  content,
+  score
     };
   });
 
@@ -107,8 +119,32 @@ export class ChessService {
   private previousBoard: ChessSquare[][] = [];
   private aiMoveInProgress = false;
   private aiMovesCache = new Map<string, Position[]>();
+  private readonly SCORE_HISTORY_KEY = 'chess.scoreHistory.v1';
 
   constructor() {
+
+    // Cargar historial de puntajes desde localStorage (si existe)
+    try {
+      const raw = localStorage.getItem(this.SCORE_HISTORY_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as import('../helpers/interfaces').ScoreEntry[];
+        if (Array.isArray(parsed)) {
+          this.scoreHistory.set(parsed);
+        }
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    // Guardar en localStorage cada vez que cambie el historial
+    effect(() => {
+      try {
+        const h = this.scoreHistory();
+        localStorage.setItem(this.SCORE_HISTORY_KEY, JSON.stringify(h));
+      } catch (e) {
+        // ignore storage errors
+      }
+    });
 
     effect(() => {
       const currentBoard = this.board();
@@ -264,6 +300,8 @@ export class ChessService {
     this.aiMovesCache.clear();
     this.aiMoveInProgress = false;
     this.previousBoard = [];
+  // Reiniciar puntaje de la última partida
+  this.lastGameScore.set(0);
   }
 
   /**
@@ -598,9 +636,57 @@ export class ChessService {
   private endGame(winner: PieceColor): void {
     this.gameOver.set(true);
     this.winnerColor.set(winner);
+    // Calcular y guardar el puntaje final de la partida
+    try {
+      const score = this.computeScore(winner);
+      this.lastGameScore.set(score);
+      // registrar en historial, con metadatos
+      const entry: import('../helpers/interfaces').ScoreEntry = {
+        score,
+        winner: winner as import('../helpers/interfaces').WinnerType,
+        moves: this.totalMovements(),
+        difficulty: this.aiDifficulty(),
+        date: new Date().toISOString()
+      };
+      // insertar al inicio
+      this.scoreHistory.update(h => [entry, ...h].slice(0, 50));
+    } catch (e) {
+      // en caso de fallo, dejar puntaje en 0
+      this.lastGameScore.set(0);
+    }
     setTimeout(() => {
       this.showVictoryModal.set(true);
     }, 100);
+  }
+
+  /**
+   * Computa el puntaje final de la partida.
+   * Regla básica:
+   * - La dificultad aporta un multiplicador: easy=1, medium=1.5, hard=2, very-hard=2.5
+   * - Menos movimientos => mayor puntaje. Fórmula simple: base * difficultyMultiplier * efficiency
+   * - base: valor fijo por victoria (100)
+   * - efficiency: max(0.2, (20 - moves) / 20) para recompensar partidas cortas hasta 20 movimientos
+   * - capturas y jaque pueden añadir pequeños bonus
+   * Inputs: winner (PieceColor)
+   * Output: número entero >= 0
+   */
+  private computeScore(winner: PieceColor): number {
+    // contract: only call when gameOver=true
+    const base = 100;
+    const difficulty = this.aiDifficulty();
+    const difficultyMultiplier = difficulty === 1 ? 1 : difficulty === 2 ? 1.5 : difficulty === 3 ? 2 : 2.5;
+    const moves = this.totalMovements() || 0;
+    const efficiency = Math.max(0.2, (20 - moves) / 20);
+
+    // bonus por capturas realizadas por el ganador
+    const winnerCaptures = winner === PieceColor.White ? this.whiteCaptures() : this.blackCaptures();
+    const captureBonus = Math.min(10, winnerCaptures * 5);
+
+    // small bonus por dar jaque al final
+    const checkBonus = (winner === PieceColor.White ? this.blackInCheck() : this.whiteInCheck()) ? 5 : 0;
+
+    const raw = base * difficultyMultiplier * (0.5 + efficiency) + captureBonus + checkBonus;
+    return Math.max(0, Math.round(raw));
   }
 
   /**

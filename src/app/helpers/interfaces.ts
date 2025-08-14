@@ -89,6 +89,8 @@ export interface ModalData {
   open: boolean;
   title: string;
   content: string;
+  // Puntaje opcional que puede mostrarse en modales de finalización
+  score?: number;
 }
 
 /**
@@ -131,6 +133,17 @@ export interface AiDifficultyOption {
   value: 1 | 2 | 3 | 4;
   key: 'easy' | 'medium' | 'hard' | 'very-hard';
   label: string;
+}
+
+/**
+ * Entrada de historial de puntajes por partida
+ */
+export interface ScoreEntry {
+  score: number;
+  winner: WinnerType;
+  moves: number;
+  difficulty: 1 | 2 | 3 | 4;
+  date: string; // ISO
 }
 
 /**

@@ -45,7 +45,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
   ]
 })
 export class ModalGameComponent {
-  @Input() modalData: { open: boolean; title: string; content: string } = { open: false, title: '', content: '' };
+  @Input() modalData: import('../../helpers/interfaces').ModalData = { open: false, title: '', content: '' };
   @Input() showCloseButton: boolean = true;
   @Output() closeModal = new EventEmitter<void>();
 

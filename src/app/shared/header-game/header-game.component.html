@@ -17,6 +17,37 @@
         class="py-1 px-3 rounded-md inline-flex text-sm font-semibold items-center justify-center">
         {{ currentTurn === PieceColor.White ? 'Blancas' : 'Negras' }}
       </div>
+      
+      <!-- Botón historial al lado del turno -->
+      <div class="ml-3 relative">
+        <button (click)="toggleScoreDropdown()" class="bg-white border rounded-md p-1 hover:bg-gray-50 shadow-sm w-8 h-8 flex items-center justify-center" title="Historial de puntajes">
+          <svg class="w-4 h-4 text-gray-700" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        @if (showScoreDropdown) {
+        <div class="absolute left-0 mt-2 w-56 bg-white border rounded-md shadow-lg z-50">
+          <div class="p-2 text-xs text-gray-500">Historial de puntajes</div>
+          <div class="max-h-48 overflow-auto">
+            @if (!scoreHistory || scoreHistory.length === 0) {
+              <div class="p-3 text-center text-sm text-gray-500">Sin puntajes aún</div>
+            } @else {
+              @for (s of scoreHistory; track $index) {
+                <div class="p-2 hover:bg-gray-50 border-t last:border-b">
+                  <div class="flex justify-between items-center">
+                    <div class="text-sm font-medium text-gray-800">{{ s.score }}</div>
+                    <div class="text-xs text-gray-500">{{ s.winner === 'white' ? 'B' : s.winner === 'black' ? 'N' : '-' }}</div>
+                  </div>
+                  <div class="text-xs text-gray-400">{{ s.moves }} mov · {{ s.difficulty }} · {{ s.date }}</div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+        }
+
+      </div>
     </div>
 
     <!-- Estadísticas -->
@@ -99,7 +130,7 @@
 
     <!-- Botones -->
     <div class="flex-shrink-0" [class.w-full]="isVertical" [class.mt-auto]="isVertical">
-      <div class="grid gap-2" [class.grid-cols-3]="!isVertical" [class.grid-cols-1]="isVertical">
+  <div class="grid gap-2" [class.grid-cols-3]="!isVertical" [class.grid-cols-1]="isVertical">
         <!-- Toggle IA -->
         <button (click)="onToggleAi()" [class.bg-green-500]="aiEnabled" [class.hover:bg-green-600]="aiEnabled"
           [class.bg-gray-500]="!aiEnabled" [class.hover:bg-gray-600]="!aiEnabled"
@@ -161,6 +192,8 @@
             REINICIAR
           </span>
         </button>
+
+        
       </div>
     </div>
   </div>

@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { PieceColor, AiDifficulty } from '../../helpers/interfaces';
+import { CommonModule, DatePipe } from '@angular/common';
 import {
   trigger,
   state,
@@ -14,6 +15,8 @@ import {
 @Component({
   selector: 'app-header-game',
   templateUrl: './header-game.component.html',
+  standalone: true,
+  imports: [CommonModule],
   animations: [
     // Banner de jaque: aparece desde arriba y puede tener estado prominente
     trigger('bannerAnim', [
@@ -84,6 +87,7 @@ export class HeaderGameComponent {
   @Input() aiDifficulty!: 1 | 2 | 3 | 4;
   @Input() whiteInCheck!: boolean;
   @Input() blackInCheck!: boolean;
+  @Input() scoreHistory: import('../../helpers/interfaces').ScoreEntry[] = [];
   @Input() statsAnimationClass: string = '';
   @Input() isVertical: boolean = false;
   
@@ -92,6 +96,13 @@ export class HeaderGameComponent {
 
   // Hacer disponible el enum en el template
   readonly PieceColor = PieceColor;
+
+  // Estado local UI para desplegable de historial de puntajes
+  public showScoreDropdown: boolean = false;
+
+  toggleScoreDropdown(): void {
+    this.showScoreDropdown = !this.showScoreDropdown;
+  }
 
   getDifficultyLabel(): string {
     if (this.aiDifficulty === 1) return 'Fácil';
