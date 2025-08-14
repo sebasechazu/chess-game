@@ -50,6 +50,8 @@ export class ChessService {
   public readonly board: WritableSignal<ChessSquare[][]> = signal<ChessSquare[][]>([]);
   public readonly currentTurn: WritableSignal<PieceColor> = signal<PieceColor>(PieceColor.White);
   public readonly gameOver: WritableSignal<boolean> = signal<boolean>(false);
+  public readonly whiteInCheck: WritableSignal<boolean> = signal<boolean>(false);
+  public readonly blackInCheck: WritableSignal<boolean> = signal<boolean>(false);
   public readonly winnerColor: WritableSignal<WinnerType> = signal<WinnerType>(null);
   public readonly showVictoryModal: WritableSignal<boolean> = signal<boolean>(false);
   public readonly gameInitialized: WritableSignal<boolean> = signal<boolean>(false);
@@ -526,13 +528,63 @@ export class ChessService {
    */
   private checkGameStatus(): void {
     const currentBoard = this.board();
-    const kings = findKings(currentBoard);
+    const kingsExist = findKings(currentBoard);
 
-    if (!kings.white) {
+    // Si falta un rey, termina la partida (como antes)
+    if (!kingsExist.white) {
       this.endGame(PieceColor.Black);
-    } else if (!kings.black) {
-      this.endGame(PieceColor.White);
+      return;
     }
+    if (!kingsExist.black) {
+      this.endGame(PieceColor.White);
+      return;
+    }
+
+    // Detectar jaque: si alguna pieza del oponente puede capturar el rey
+    const whiteKingPos = this.findKingPosition(currentBoard, PieceColor.White);
+    const blackKingPos = this.findKingPosition(currentBoard, PieceColor.Black);
+
+    let whiteInCheck = false;
+    let blackInCheck = false;
+
+    if (whiteKingPos) {
+      const opponents = getAllPiecesForColor(currentBoard, PieceColor.Black);
+      for (const p of opponents) {
+        const moves = this.getValidMovesForPieceWithRules(currentBoard, p);
+        if (moves.includes(whiteKingPos)) {
+          whiteInCheck = true;
+          break;
+        }
+      }
+    }
+
+    if (blackKingPos) {
+      const opponents = getAllPiecesForColor(currentBoard, PieceColor.White);
+      for (const p of opponents) {
+        const moves = this.getValidMovesForPieceWithRules(currentBoard, p);
+        if (moves.includes(blackKingPos)) {
+          blackInCheck = true;
+          break;
+        }
+      }
+    }
+
+    this.whiteInCheck.set(whiteInCheck);
+    this.blackInCheck.set(blackInCheck);
+  }
+
+  /**
+   * Busca la posición del rey de un color dado
+   */
+  private findKingPosition(board: ChessSquare[][], color: PieceColor): Position | null {
+    for (const row of board) {
+      for (const sq of row) {
+        if (sq.piece && sq.piece.type === PieceType.King && sq.piece.color === color) {
+          return sq.position;
+        }
+      }
+    }
+    return null;
   }
 
   /**

@@ -9,6 +9,28 @@
     [class.justify-between]="isVertical"
     [class.gap-2]="!isVertical"
     [class.gap-6]="isVertical">
+
+    <!-- Banner de Jaque (prominente, tono violeta) -->
+    @if (checkWarning.show) {
+      <div class="w-full mb-3">
+  <div class="flex items-center justify-center gap-2 bg-violet-600 text-white text-center text-sm font-bold py-2 px-3 rounded-lg shadow-md"
+       [class.ring-2]="checkProminent"
+  [style.boxShadow]="checkProminent ? '0 0 0 6px rgba(196,181,253,0.3)' : null"
+       [class.animate-pulse]="checkProminent">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12c0 4.9706-4.0294 9-9 9s-9-4.0294-9-9 4.0294-9 9-9 9 4.0294 9 9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>{{ checkWarning.text }}</span>
+        </div>
+        @if (suggestionText) {
+          <div class="mt-2 rounded-md p-2 text-center" [class.text-xs]="!isVertical" [class.text-sm]="isVertical" [class.bg-violet-100]="true" [class.text-violet-700]="true">
+            {{ suggestionText }}
+          </div>
+        }
+      </div>
+    }
     
     <!-- Información del turno -->
     <div class="text-center flex-shrink-0">

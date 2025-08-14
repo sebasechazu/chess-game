@@ -74,12 +74,38 @@ La app estará disponible en `http://localhost:4200`
 - ✅ Animaciones suaves
 - ✅ Diseño responsive
 
+## 🧠 Selector de dificultad de la IA
+
+Se añadió un control para ajustar la dificultad de la inteligencia artificial desde la interfaz y también por código.
+
+- Ubicación UI: el selector aparece en el componente `app-header-game` junto a los botones de IA y reiniciar.
+- Valores disponibles:
+    - `1` o `"easy"` — Fácil (aleatorio entre movimientos buenos)
+    - `2` o `"medium"` — Medio (elige la mejor jugada heurística)
+    - `3` o `"hard"` — Difícil (minimax a profundidad corta para mirar la respuesta del rival)
+
+Uso por código (desde cualquier componente):
+
+```ts
+// inyectar ChessService y cambiar la dificultad
+constructor(private chessService: ChessService) {}
+
+// establecer dificultad a 'hard'
+this.chessService.setAiDifficulty('hard');
+// o con número
+this.chessService.setAiDifficulty(3);
+```
+
+Notas y consideraciones:
+- Al cambiar la dificultad, el servicio limpia la cache interna de movimientos para forzar recomputo.
+- El modo "hard" realiza una búsqueda adicional (minimax a profundidad 2) y puede tardar más en calcular el movimiento en máquinas lentas.
+- Si quieres persistir la preferencia del usuario entre sesiones, se puede almacenar el valor en `localStorage` y restaurarlo al inicializar el servicio.
+
 ## 📝 Próximas mejoras
 
 - [ ] Enroque (castling)
 - [ ] Captura al paso (en passant)  
 - [ ] Promoción de peones
-- [ ] Niveles de dificultad de IA
 - [ ] Modo multijugador local
 
 ## 🤝 Contribuir

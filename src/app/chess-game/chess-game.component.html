@@ -13,6 +13,8 @@
         [blackCaptures]="chessService.blackCaptures()"
         [aiEnabled]="chessService.aiEnabled()"
         [aiDifficulty]="chessService.aiDifficulty()"
+  [whiteInCheck]="chessService.whiteInCheck()"
+  [blackInCheck]="chessService.blackInCheck()"
         [onReset]="onReset.bind(this)"
         (toggleAi)="onToggleAi($event)"
         (changeDifficulty)="onChangeDifficulty($event)" />
@@ -43,6 +45,8 @@
             [blackCaptures]="chessService.blackCaptures()"
             [aiEnabled]="chessService.aiEnabled()"
             [aiDifficulty]="chessService.aiDifficulty()"
+            [whiteInCheck]="chessService.whiteInCheck()"
+            [blackInCheck]="chessService.blackInCheck()"
             [onReset]="onReset.bind(this)"
             [isVertical]="true"
             (toggleAi)="onToggleAi($event)"
