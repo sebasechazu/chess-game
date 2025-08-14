@@ -895,7 +895,11 @@ export class ChessService {
       score += 1;
     }
 
-    score += Math.random() * 0.5;
+  // Añadir un componente aleatorio reducido según la dificultad
+  // easy: full randomness, medium: pequeña, hard/very-hard: sin aleatoriedad
+  const difficulty = this.aiDifficulty();
+  const randMultiplier = difficulty === 1 ? 1 : difficulty === 2 ? 0.2 : 0;
+  score += Math.random() * 0.5 * randMultiplier;
 
     return score;
   }
