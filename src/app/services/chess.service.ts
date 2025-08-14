@@ -10,10 +10,10 @@ import {
   MoveData,
   ModalData,
   WinnerType,
+  AiDifficulty,
   Position,
   Coordinates
 } from '../helpers/interfaces';
-import { AiDifficulty } from '../helpers/interfaces';
 import {
   isValidPawnMove,
   isValidRookMove,
@@ -53,7 +53,7 @@ export class ChessService {
   public readonly gameOver: WritableSignal<boolean> = signal<boolean>(false);
   public readonly whiteInCheck: WritableSignal<boolean> = signal<boolean>(false);
   public readonly blackInCheck: WritableSignal<boolean> = signal<boolean>(false);
-  public readonly winnerColor: WritableSignal<WinnerType> = signal<WinnerType>(null);
+  public readonly winnerColor: WritableSignal<WinnerType | null> = signal<WinnerType | null>(null);
   public readonly showVictoryModal: WritableSignal<boolean> = signal<boolean>(false);
   public readonly gameInitialized: WritableSignal<boolean> = signal<boolean>(false);
   public readonly showInitialAnimations: WritableSignal<boolean> = signal<boolean>(false);
@@ -581,12 +581,13 @@ export class ChessService {
 
   /**
    * Verifica el estado del juego
+   * - Detecta jaque y jaque mate
    */
   private checkGameStatus(): void {
     const currentBoard = this.board();
     const kingsExist = findKings(currentBoard);
 
-    // Si falta un rey, termina la partida (como antes)
+    
     if (!kingsExist.white) {
       this.endGame(PieceColor.Black);
       return;
@@ -596,7 +597,7 @@ export class ChessService {
       return;
     }
 
-    // Detectar jaque: si alguna pieza del oponente puede capturar el rey
+   
     const whiteKingPos = this.findKingPosition(currentBoard, PieceColor.White);
     const blackKingPos = this.findKingPosition(currentBoard, PieceColor.Black);
 
@@ -631,6 +632,9 @@ export class ChessService {
 
   /**
    * Busca la posición del rey de un color dado
+   * @param board - Tablero actual
+   * @param color - Color del rey a buscar
+   * @returns La posición del rey o null si no se encuentra
    */
   private findKingPosition(board: ChessSquare[][], color: PieceColor): Position | null {
     for (const row of board) {
@@ -804,7 +808,8 @@ export class ChessService {
       }
     }
 
-    if (this.aiMovesCache.size < 100) {
+    // allow a larger cache for generated moves to improve reuse during deeper searches
+    if (this.aiMovesCache.size < 1000) {
       this.aiMovesCache.set(cacheKey, validMoves);
     }
 
@@ -817,13 +822,24 @@ export class ChessService {
    * @returns Hash del tablero
    */
   private generateBoardHash(board: ChessSquare[][]): string {
-    let hash = '';
+    // build a compact deterministic string representation and hash it with djb2
+    let seed = '';
     for (const row of board) {
       for (const square of row) {
-        hash += square.piece ? `${square.piece.type}${square.piece.color}${square.position}` : '0';
+        seed += square.piece ? `${square.piece.type}:${square.piece.color}:${square.position};` : '0;';
       }
     }
-    return hash.slice(0, 50);
+
+    // djb2 string hash -> 32-bit unsigned hex
+    let h = 5381;
+    for (let i = 0; i < seed.length; i++) {
+      h = ((h << 5) + h) + seed.charCodeAt(i); /* h * 33 + c */
+      h = h | 0; // force 32-bit int
+    }
+    const hex = (h >>> 0).toString(16);
+    // include a short slice of the seed as human-readable component
+    const readable = seed.slice(0, 40).replace(/;/g, '|');
+    return `${hex}-${readable}`;
   }
 
   /**
@@ -962,7 +978,12 @@ export class ChessService {
 
   /**
    * Minimax con poda alpha-beta para mejorar rendimiento en búsquedas más profundas.
-   * Devuelve la puntuación heurística del tablero desde la perspectiva de las negras (IA).
+   * @param board - Tablero actual
+   * @param depth - Profundidad de búsqueda
+   * @param alpha - Valor mínimo garantizado para el jugador maximizar
+   * @param beta - Valor máximo garantizado para el jugador minimizar
+   * @param maximizingPlayer - Indica si es el turno del jugador maximizar (negras)
+   * @returns Puntuación heurística del tablero
    */
   private minimaxAlphaBeta(board: ChessSquare[][], depth: number, alpha: number, beta: number, maximizingPlayer: boolean): number {
     if (depth === 0) {
