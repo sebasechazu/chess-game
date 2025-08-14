@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ChessService } from '../services/chess.service';
+import { AppService } from '../services/app.service';
 import { AiDifficulty } from '../helpers/interfaces';
 import { CommonModule } from '@angular/common';
 import { ChessBoardComponent } from './chess-board/chess-board.component';
@@ -26,7 +26,9 @@ import { HeaderGameComponent } from '../shared/header-game/header-game.component
 })
 export class ChessGameComponent {
 
-  readonly chessService = inject(ChessService);
+  // migración gradual: usar AppService en lugar de ChessService
+  // usar AppService directamente
+  readonly chessService = inject(AppService);
   
   /** Tablero de ajedrez reactivo */
   board = this.chessService.board;

@@ -1,4 +1,5 @@
 import { provideZonelessChangeDetection } from '@angular/core';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 
@@ -6,7 +7,7 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideZonelessChangeDetection()]
+      providers: [provideZonelessChangeDetection(), provideNoopAnimations()]
     }).compileComponents();
   });
 
@@ -17,9 +18,10 @@ describe('App', () => {
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, chess-game');
+  const fixture = TestBed.createComponent(App);
+  fixture.detectChanges();
+  const compiled = fixture.nativeElement as HTMLElement;
+  // verificar que el componente principal del juego esté presente
+  expect(compiled.querySelector('app-chess-game')).toBeTruthy();
   });
 });
