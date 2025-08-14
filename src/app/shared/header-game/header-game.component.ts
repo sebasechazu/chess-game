@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { PieceColor } from '../../helpers/interfaces';
+import { PieceColor, AiDifficulty } from '../../helpers/interfaces';
 
 @Component({
   selector: 'app-header-game',
@@ -12,14 +12,14 @@ export class HeaderGameComponent {
   @Input() whiteCaptures!: number;
   @Input() blackCaptures!: number;
   @Input() aiEnabled!: boolean;
-  @Input() aiDifficulty!: number;
+  @Input() aiDifficulty!: 1 | 2 | 3;
   @Input() whiteInCheck!: boolean;
   @Input() blackInCheck!: boolean;
   @Input() statsAnimationClass: string = '';
   @Input() isVertical: boolean = false;
   
   @Output() toggleAi = new EventEmitter<boolean>();
-  @Output() changeDifficulty = new EventEmitter<'easy' | 'medium' | 'hard' | number>();
+  @Output() changeDifficulty = new EventEmitter<'easy' | 'medium' | 'hard' | AiDifficulty>();
 
   // Hacer disponible el enum en el template
   readonly PieceColor = PieceColor;
@@ -43,7 +43,8 @@ export class HeaderGameComponent {
 
     const n = Number(value);
     if (!isNaN(n)) {
-      this.changeDifficulty.emit(n);
+      const d = Math.max(1, Math.min(3, Math.floor(n))) as AiDifficulty;
+      this.changeDifficulty.emit(d);
     }
   }
 

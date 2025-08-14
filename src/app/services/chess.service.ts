@@ -13,6 +13,7 @@ import {
   Position,
   Coordinates
 } from '../helpers/interfaces';
+import { AiDifficulty } from '../helpers/interfaces';
 import {
   isValidPawnMove,
   isValidRookMove,
@@ -67,7 +68,7 @@ export class ChessService {
   public readonly blackCaptures: WritableSignal<number> = signal<number>(0);
   public readonly aiEnabled: WritableSignal<boolean> = signal<boolean>(true);
   // Dificultad de la IA: 1 = easy, 2 = medium, 3 = hard
-  public readonly aiDifficulty: WritableSignal<number> = signal<number>(2);
+  public readonly aiDifficulty: WritableSignal<1 | 2 | 3> = signal<1 | 2 | 3>(2);
 
   /** 
    * Datos reactivos para el modal de victoria 
@@ -726,10 +727,10 @@ export class ChessService {
    * Establece la dificultad de la IA: 'easy' | 'medium' | 'hard' o número 1..3
    * @param level - Nivel de dificultad
    */
-  public setAiDifficulty(level: 'easy' | 'medium' | 'hard' | number): void {
-    let val = 2;
+  public setAiDifficulty(level: AiDifficulty): void {
+    let val: 1 | 2 | 3 = 2;
     if (typeof level === 'number') {
-      val = Math.max(1, Math.min(3, Math.floor(level)));
+      val = Math.max(1, Math.min(3, Math.floor(level))) as 1 | 2 | 3;
     } else {
       if (level === 'easy') val = 1;
       else if (level === 'medium') val = 2;

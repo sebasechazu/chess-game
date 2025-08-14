@@ -123,6 +123,17 @@ export type Coordinates = { row: number; col: number };
 export type WinnerType = PieceColor | 'draw' | null;
 
 /**
+ * Niveles de dificultad de la IA
+ */
+export type AiDifficulty = 1 | 2 | 3 | 'easy' | 'medium' | 'hard';
+
+export interface AiDifficultyOption {
+  value: 1 | 2 | 3;
+  key: 'easy' | 'medium' | 'hard';
+  label: string;
+}
+
+/**
  * Valores numéricos de las piezas para evaluación
  */
 export const PIECE_VALUES = {

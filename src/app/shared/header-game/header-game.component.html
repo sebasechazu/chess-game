@@ -61,53 +61,54 @@
         <div class="bg-white p-1 rounded-md shadow-sm text-center border"
              [class.p-3]="isVertical"
              [class.rounded-lg]="isVertical">
-          <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight"
-               [class.tracking-wide]="isVertical"
-               [class.leading-normal]="isVertical">
-            Movimientos
-          </div>
-          <div class="text-sm font-bold text-blue-600 leading-tight"
-               [class.text-xl]="isVertical"
-               [class.leading-normal]="isVertical">
-            {{ totalMovements }}
-          </div>
-        </div>
-        
-        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
-             [class.p-3]="isVertical"
-             [class.rounded-lg]="isVertical">
-          <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
-               [class.tracking-wide]="isVertical"
-               [class.leading-normal]="isVertical">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 16C5 14.8954 5.89543 14 7 14H17C18.1046 14 19 14.8954 19 16V18C19 19.1046 18.1046 20 17 20H7C5.89543 20 5 19.1046 5 18V16Z" fill="currentColor"/>
-              <path d="M12 2L10 6L6 6L9 9L8 13L12 11L16 13L15 9L18 6L14 6L12 2Z" fill="currentColor"/>
-            </svg>
-            Capturas Blancas
-          </div>
-          <div class="text-sm font-bold text-green-600 leading-tight"
-               [class.text-xl]="isVertical"
-               [class.leading-normal]="isVertical">
-            {{ whiteCaptures }}
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
+            <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight"
+                 [class.tracking-wide]="isVertical"
+                 [class.leading-normal]="isVertical">
+              Movimientos
+            </div>
+
+            <div class="text-sm font-bold text-blue-600 leading-tight mt-1 sm:mt-0"
+                 [class.text-xl]="isVertical"
+                 [class.leading-normal]="isVertical">
+              {{ totalMovements }}
+            </div>
           </div>
         </div>
         
         <div class="bg-white p-1 rounded-md shadow-sm text-center border"
              [class.p-3]="isVertical"
              [class.rounded-lg]="isVertical">
-          <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
-               [class.tracking-wide]="isVertical"
-               [class.leading-normal]="isVertical">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 16C5 14.8954 5.89543 14 7 14H17C18.1046 14 19 14.8954 19 16V18C19 19.1046 18.1046 20 17 20H7C5.89543 20 5 19.1046 5 18V16Z" fill="currentColor"/>
-              <path d="M12 2L10 6L6 6L9 9L8 13L12 11L16 13L15 9L18 6L14 6L12 2Z" fill="currentColor"/>
-            </svg>
-            Capturas Negras
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
+            <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
+                 [class.tracking-wide]="isVertical"
+                 [class.leading-normal]="isVertical">
+              Capturas Blancas
+            </div>
+
+            <div class="text-sm font-bold text-green-600 leading-tight mt-1 sm:mt-0"
+                 [class.text-xl]="isVertical"
+                 [class.leading-normal]="isVertical">
+              {{ whiteCaptures }}
+            </div>
           </div>
-          <div class="text-sm font-bold text-red-600 leading-tight"
-               [class.text-xl]="isVertical"
-               [class.leading-normal]="isVertical">
-            {{ blackCaptures }}
+        </div>
+        
+        <div class="bg-white p-1 rounded-md shadow-sm text-center border"
+             [class.p-3]="isVertical"
+             [class.rounded-lg]="isVertical">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
+            <div class="text-xs text-gray-500 uppercase tracking-tight leading-tight flex items-center justify-center gap-1"
+                 [class.tracking-wide]="isVertical"
+                 [class.leading-normal]="isVertical">
+              Capturas Negras
+            </div>
+
+            <div class="text-sm font-bold text-red-600 leading-tight mt-1 sm:mt-0"
+                 [class.text-xl]="isVertical"
+                 [class.leading-normal]="isVertical">
+              {{ blackCaptures }}
+            </div>
           </div>
         </div>
       </div>
@@ -147,14 +148,18 @@
         </button>
         
         <!-- Selector Dificultad IA (estilo consistente con botones) -->
-        <div class="flex items-center justify-center">
-          <label class="sr-only">Dificultad IA</label>
-          <select [value]="aiDifficulty" (change)="onDifficultyChange($any($event.target).value)"
-                  class="bg-white border-1 rounded-lg py-2 px-3 text-sm font-bold shadow-sm w-full text-center hover:bg-gray-100 focus:outline-none">
-            <option value="1">Fácil</option>
-            <option value="2">Medio</option>
-            <option value="3">Difícil</option>
-          </select>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+          <!-- Label fijo: 'Nivel de IA' -->
+          <label for="ai-difficulty-select" class="text-sm font-semibold text-gray-700 self-center">Nivel de IA</label>
+
+          <div class="w-full sm:w-auto">
+            <select id="ai-difficulty-select" [value]="aiDifficulty" (change)="onDifficultyChange($any($event.target).value)"
+                    class="bg-white border-1 rounded-lg py-2 px-3 text-sm font-bold shadow-sm w-full text-center hover:bg-gray-100 focus:outline-none">
+              <option value="1">Fácil</option>
+              <option value="2">Medio</option>
+              <option value="3">Difícil</option>
+            </select>
+          </div>
         </div>
 
         <button (click)="onReset()" 

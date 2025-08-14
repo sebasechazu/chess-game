@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ChessService } from '../services/chess.service';
+import { AiDifficulty } from '../helpers/interfaces';
 import { CommonModule } from '@angular/common';
 import { ChessBoardComponent } from './chess-board/chess-board.component';
 import { ModalGameComponent } from '../shared/modal-game/modal-game.component';
@@ -38,7 +39,7 @@ export class ChessGameComponent {
     this.chessService.initializeGame();
   }
 
-  onChangeDifficulty(level: 'easy' | 'medium' | 'hard' | number): void {
+  onChangeDifficulty(level: AiDifficulty): void {
     this.chessService.setAiDifficulty(level);
   }
 
