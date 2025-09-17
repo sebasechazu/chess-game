@@ -183,8 +183,7 @@ export class AppService {
     const targetPiece = getPieceAtPosition(board, toPos);
     const result = this.performMoveWithResult(fromPos, toPos, targetPiece || null);
     if (!result.success) return result;
-    this.updateGameStateAfterMove({ sourcePos: fromPos, targetPos: toPos, movedPiece: getPieceAtPosition(this.board(), toPos), capturedPiece: result.captured || null });
-    if (this.currentTurn() === PieceColor.Black && !this.gameOver()) setTimeout(() => this.makeAiMove(), 250);
+    // El effect se encarga de detectar el cambio y actualizar el estado del juego
     return result;
   }
 
