@@ -14,7 +14,8 @@ import {
   isValidKnightMove,
   isValidBishopMove,
   isValidQueenMove,
-  isValidKingMove
+  isValidKingMove,
+  isValidCastlingMove
 } from '../helpers/chess-rules';
 import {
   positionToCoordinates,
@@ -154,7 +155,18 @@ export class AiService {
       score += getCenterPositionBonus(toCoords) * 2;
     }
 
-    if (movingPiece.type === PieceType.King) score -= 2;
+    // Bonificación especial para enroque
+    if (movingPiece.type === PieceType.King) {
+      const fromCoords = positionToCoordinates(from);
+      const colDiff = Math.abs(toCoords.col - fromCoords.col);
+      
+      // Si el rey se mueve 2 casillas horizontalmente, es enroque
+      if (colDiff === 2 && fromCoords.row === toCoords.row) {
+        score += 8; // Bonificación alta para enroque por su valor estratégico
+      } else {
+        score -= 2; // Penalización por mover el rey sin enrocar
+      }
+    }
 
     const fromCoords = positionToCoordinates(from);
     if ((movingPiece.color === PieceColor.Black && fromCoords.row <= 1) ||
@@ -177,8 +189,38 @@ export class AiService {
     const toSq = getSquareAtPosition(newBoard, to);
     if (!fromSq || !toSq || !fromSq.piece) return newBoard;
 
-    toSq.piece = { ...fromSq.piece, position: to };
+    const piece = fromSq.piece;
+    
+    // Verificar si es un movimiento de enroque
+    if (piece.type === PieceType.King) {
+      const fromCoords = positionToCoordinates(from);
+      const toCoords = positionToCoordinates(to);
+      const colDiff = Math.abs(toCoords.col - fromCoords.col);
+      
+      if (colDiff === 2 && fromCoords.row === toCoords.row) {
+        // Es un enroque, también mover la torre
+        const isKingSideCastling = toCoords.col > fromCoords.col;
+        const rookFromCol = isKingSideCastling ? 7 : 0;
+        const rookToCol = isKingSideCastling ? toCoords.col - 1 : toCoords.col + 1;
+        
+        const rookFromPos = `${String.fromCharCode(97 + rookFromCol)}${8 - fromCoords.row}`;
+        const rookToPos = `${String.fromCharCode(97 + rookToCol)}${8 - toCoords.row}`;
+        
+        const rookFromSq = getSquareAtPosition(newBoard, rookFromPos);
+        const rookToSq = getSquareAtPosition(newBoard, rookToPos);
+        
+        if (rookFromSq && rookToSq && rookFromSq.piece) {
+          // Mover la torre
+          rookToSq.piece = { ...rookFromSq.piece, position: rookToPos, hasMoved: true };
+          rookFromSq.piece = null;
+        }
+      }
+    }
+
+    // Mover la pieza principal
+    toSq.piece = { ...piece, position: to, hasMoved: true };
     fromSq.piece = null;
+    
     return newBoard;
   }
 
