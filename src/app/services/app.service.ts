@@ -7,7 +7,6 @@ import {
   MoveResult,
   AiMove,
   MoveData,
-  AiDifficulty,
   Position,
   ModalData,
   WinnerType
@@ -48,7 +47,7 @@ import { AiService } from './ai.service';
 export class AppService {
   public board: WritableSignal<ChessSquare[][]> = signal(createEmptyBoard());
   public currentTurn = signal<PieceColor>(PieceColor.White);
-  public aiDifficulty = signal<1 | 2 | 3 | 4>(2);
+  public aiDifficulty = signal<1 | 2 | 3 | 4>(4); // Siempre nivel máximo
   public aiEnabled = signal<boolean>(true);
   public moveHistory = signal<string[]>([]);
   public totalMovements = signal<number>(0);
@@ -409,14 +408,6 @@ export class AppService {
 
   public getValidMovesForPiece(board: ChessSquare[][], position: Position): Position[] {
     return this.aiService.getValidMovesForPieceWithRules(board, position);
-  }
-
-  public setAiDifficulty(level: AiDifficulty): void {
-    let val: 1 | 2 | 3 | 4 = 2;
-    if (typeof level === 'number') val = Math.max(1, Math.min(4, Math.floor(level))) as 1 | 2 | 3 | 4;
-    else { if (level === 'easy') val = 1; else if (level === 'medium') val = 2; else if (level === 'hard') val = 3; else if (level === 'very-hard') val = 4; }
-    this.aiDifficulty.set(val);
-    this.aiService.clearCache();
   }
 
   private checkGameStatus(): void {

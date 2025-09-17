@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
-import { PieceColor, AiDifficulty } from '../../helpers/interfaces';
+import { PieceColor } from '../../helpers/interfaces';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   trigger,
@@ -84,7 +84,6 @@ export class HeaderGameComponent {
   @Input() whiteCaptures!: number;
   @Input() blackCaptures!: number;
   @Input() aiEnabled!: boolean;
-  @Input() aiDifficulty!: 1 | 2 | 3 | 4;
   @Input() whiteInCheck!: boolean;
   @Input() blackInCheck!: boolean;
   @Input() scoreHistory: import('../../helpers/interfaces').ScoreEntry[] = [];
@@ -92,7 +91,6 @@ export class HeaderGameComponent {
   @Input() isVertical: boolean = false;
   
   @Output() toggleAi = new EventEmitter<boolean>();
-  @Output() changeDifficulty = new EventEmitter<'easy' | 'medium' | 'hard' | AiDifficulty>();
   @Output() clearHistory = new EventEmitter<void>();
 
   // Hacer disponible el enum en el template
@@ -127,28 +125,7 @@ export class HeaderGameComponent {
   }
 
   getDifficultyLabel(): string {
-    if (this.aiDifficulty === 1) return 'Fácil';
-  if (this.aiDifficulty === 3) return 'Difícil';
-  if (this.aiDifficulty === 4) return 'Muy difícil';
-    return 'Medio';
-  }
-
-  /**
-   * Maneja los cambios en la dificultad de la IA.
-   * @param value La nueva dificultad, puede ser una etiqueta ('easy'|'medium'|'hard') o un valor numérico ('1'|'2'|'3').
-   */
-  onDifficultyChange(value: string): void {
-    
-    if (value === 'easy' || value === 'medium' || value === 'hard') {
-      this.changeDifficulty.emit(value);
-      return;
-    }
-
-    const n = Number(value);
-    if (!isNaN(n)) {
-      const d = Math.max(1, Math.min(4, Math.floor(n))) as AiDifficulty;
-      this.changeDifficulty.emit(d);
-    }
+    return 'Muy difícil'; // Siempre nivel máximo
   }
 
   /**

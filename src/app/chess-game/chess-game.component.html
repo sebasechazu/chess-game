@@ -10,9 +10,9 @@
     <app-header-game class="w-full flex-shrink-0" [currentTurn]="chessService.currentTurn()"
       [totalMovements]="chessService.totalMovements()" [whiteCaptures]="chessService.whiteCaptures()"
       [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
-      [aiEnabled]="chessService.aiEnabled()" [aiDifficulty]="chessService.aiDifficulty()"
+      [aiEnabled]="chessService.aiEnabled()"
       [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
-      [onReset]="onReset.bind(this)" (toggleAi)="onToggleAi($event)" (changeDifficulty)="onChangeDifficulty($event)"
+      [onReset]="onReset.bind(this)" (toggleAi)="onToggleAi($event)"
       (clearHistory)="chessService.clearScoreHistory()" />
 
 
@@ -34,10 +34,10 @@
         <app-header-game class="w-full h-full" [currentTurn]="chessService.currentTurn()"
           [totalMovements]="chessService.totalMovements()" [whiteCaptures]="chessService.whiteCaptures()"
           [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
-          [aiEnabled]="chessService.aiEnabled()" [aiDifficulty]="chessService.aiDifficulty()"
+          [aiEnabled]="chessService.aiEnabled()"
           [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
           [onReset]="onReset.bind(this)" [isVertical]="true" (toggleAi)="onToggleAi($event)"
-          (changeDifficulty)="onChangeDifficulty($event)" (clearHistory)="chessService.clearScoreHistory()" />
+          (clearHistory)="chessService.clearScoreHistory()" />
       </div>
     </div>
 
