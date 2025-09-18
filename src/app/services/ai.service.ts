@@ -1,3 +1,19 @@
+// Limitar la cantidad de movimientos evaluados por rama
+
+// Mapas para convertir enums string a índices numéricos para Zobrist
+const PIECE_TYPE_INDEX: Record<string, number> = {
+  pawn: 0,
+  knight: 1,
+  bishop: 2,
+  rook: 3,
+  queen: 4,
+  king: 5
+};
+const PIECE_COLOR_INDEX: Record<string, number> = {
+  white: 0,
+  black: 1
+};
+import { zobristTable } from '../helpers/zobrist';
 import { Injectable } from '@angular/core';
 import {
   ChessPiece,
@@ -26,34 +42,46 @@ import {
   getPieceValue,
   getCenterPositionBonus
 } from '../helpers/chess-utils';
+// ...existing code...
 
 /**
  * Servicio responsable únicamente de la lógica de IA (movimientos, heurísticas, búsqueda)
  */
 @Injectable({ providedIn: 'root' })
 export class AiService {
+  private static readonly MAX_BRANCHING = 10;
   private aiMovesCache = new Map<string, Position[]>();
+  // Tabla de transposición para cachear evaluaciones de tableros
+  private transpositionTable = new Map<string, number>();
 
   constructor() {}
 
   public clearCache(): void {
-    this.aiMovesCache.clear();
+  this.aiMovesCache.clear();
+  this.transpositionTable.clear();
   }
 
   public findBestMove(board: ChessSquare[][], difficulty: AiDifficulty): AiMove | null {
+
     const blackPieces = getAllPiecesForColor(board, PieceColor.Black);
     const possibleMoves: AiMove[] = [];
 
     for (const piecePos of blackPieces) {
       const validMoves = this.getValidMovesForPieceWithRules(board, piecePos);
-
       for (const targetPos of validMoves) {
-    const baseScore = this.evaluateMove(board, piecePos, targetPos, difficulty);
+        const baseScore = this.evaluateMove(board, piecePos, targetPos, difficulty);
         possibleMoves.push({ from: piecePos, to: targetPos, score: baseScore });
       }
     }
 
-    if (possibleMoves.length === 0) return null;
+    // Log diagnóstico: cantidad de piezas negras y movimientos posibles
+    console.log('[AI] Piezas negras:', blackPieces);
+    console.log('[AI] Movimientos posibles para negras:', possibleMoves.length, possibleMoves);
+
+    if (possibleMoves.length === 0) {
+      console.warn('[AI] No hay movimientos posibles para negras.');
+      return null;
+    }
 
     possibleMoves.sort((a, b) => b.score - a.score);
 
@@ -61,6 +89,10 @@ export class AiService {
     const diffLevel = typeof difficulty === 'number' ? difficulty : (
       difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : difficulty === 'hard' ? 3 : 4
     );
+
+    // Profundidad máxima por dificultad (más baja para mejor rendimiento)
+    const depthForLevel: Record<number, number> = { 1: 1, 2: 2, 3: 2, 4: 3 };
+    const depth = depthForLevel[diffLevel] || 2;
 
     if (diffLevel === 1) {
       const topN = Math.max(1, Math.floor(possibleMoves.length * 0.2));
@@ -72,15 +104,14 @@ export class AiService {
       return possibleMoves[0];
     }
 
-    // Hard / Very-hard: minimax with alpha-beta
+    // Hard / Very-hard: minimax con profundidad limitada y ramas limitadas
     let bestMove: AiMove | null = null;
     let bestScore = -Infinity;
-  const depthForLevel: Record<number, number> = { 3: 3, 4: 4 };
-  const depth = depthForLevel[diffLevel] || 3;
-
-    for (const m of possibleMoves) {
+    // Limitar cantidad de ramas a evaluar
+  const limitedMoves = possibleMoves.slice(0, AiService.MAX_BRANCHING);
+    for (const m of limitedMoves) {
       const nb = this.simulateMove(board, m.from, m.to);
-  const score = this.minimaxAlphaBeta(nb, depth - 1, -Infinity, Infinity, false);
+      const score = this.minimaxAlphaBeta(nb, depth - 1, -Infinity, Infinity, false);
       const finalScore = score + m.score * 0.03;
       if (finalScore > bestScore) {
         bestScore = finalScore;
@@ -88,7 +119,7 @@ export class AiService {
       }
     }
 
-    return bestMove || possibleMoves[0];
+    return bestMove || limitedMoves[0];
   }
 
   public getValidMovesForPieceWithRules(board: ChessSquare[][], position: Position): Position[] {
@@ -122,21 +153,28 @@ export class AiService {
     return validMoves;
   }
 
+  // Hash Zobrist eficiente para el tablero
   private generateBoardHash(board: ChessSquare[][]): string {
-    let seed = '';
-    for (const row of board) {
-      for (const square of row) {
-        seed += square.piece ? `${square.piece.type}:${square.piece.color}:${square.position};` : '0;';
+    let hash = 0;
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const sq = board[row][col];
+        if (sq.piece) {
+          const typeIdx = PIECE_TYPE_INDEX[sq.piece.type];
+          const colorIdx = PIECE_COLOR_INDEX[sq.piece.color];
+          const validType = typeof typeIdx === 'number' && typeIdx >= 0 && typeIdx < 6;
+          const validColor = typeof colorIdx === 'number' && colorIdx >= 0 && colorIdx < 2;
+          if (validType && validColor) {
+            hash ^= zobristTable[row][col][typeIdx][colorIdx];
+          } else {
+            // Loguear el error para depuración
+            console.warn('Zobrist: tipo o color inválido', { row, col, typeIdx, colorIdx, piece: sq.piece });
+          }
+        }
       }
     }
-    let h = 5381;
-    for (let i = 0; i < seed.length; i++) {
-      h = ((h << 5) + h) + seed.charCodeAt(i);
-      h = h | 0;
-    }
-    const hex = (h >>> 0).toString(16);
-    const readable = seed.slice(0, 40).replace(/;/g, '|');
-    return `${hex}-${readable}`;
+    // Retornar como string para compatibilidad con el cache
+    return hash.toString(16);
   }
 
   private evaluateMove(board: ChessSquare[][], from: Position, to: Position, difficulty: AiDifficulty): number {
@@ -249,16 +287,101 @@ export class AiService {
   }
 
   private minimaxAlphaBeta(board: ChessSquare[][], depth: number, alpha: number, beta: number, maximizingPlayer: boolean): number {
-    if (depth === 0) {
+    // Hash del tablero y clave de cache
+    const boardHash = this.generateBoardHash(board);
+    const cacheKey = `${boardHash}|d${depth}|a${alpha}|b${beta}|m${maximizingPlayer ? 1 : 0}`;
+    if (this.transpositionTable.has(cacheKey)) {
+      return this.transpositionTable.get(cacheKey)!;
+    }
+    // --- Quiescence search ---
+    const isCaptureMoveAvailable = (board: ChessSquare[][], color: PieceColor): boolean => {
+      const pieces = getAllPiecesForColor(board, color);
+      for (const p of pieces) {
+        const moves = this.getValidMovesForPieceWithRules(board, p);
+        for (const t of moves) {
+          const target = getPieceAtPosition(board, t);
+          if (target && target.color !== color) return true;
+        }
+      }
+      return false;
+    };
+
+    // Evaluación optimizada del tablero: solo material y control de centro
+    const evaluateBoard = (board: ChessSquare[][]): number => {
       let total = 0;
+      let blackCenter = 0, whiteCenter = 0;
+      const centerSquares = ['d4','e4','d5','e5'];
       for (const row of board) {
         for (const sq of row) {
           if (!sq.piece) continue;
           const val = getPieceValue(sq.piece.type);
           total += sq.piece.color === PieceColor.Black ? val : -val;
+          if (centerSquares.includes(sq.position)) {
+            if (sq.piece.color === PieceColor.Black) blackCenter += 1;
+            else whiteCenter += 1;
+          }
         }
       }
+      // Solo ponderar material y centro
+      total += (blackCenter - whiteCenter) * 0.5;
       return total;
+    };
+
+    // Ordenar movimientos: primero capturas y limitar cantidad de ramas
+    const orderMoves = (moves: AiMove[], board: ChessSquare[][]): AiMove[] => {
+      const sorted = moves.sort((a, b) => {
+        const targetA = getPieceAtPosition(board, a.to);
+        const targetB = getPieceAtPosition(board, b.to);
+        const valA = targetA ? getPieceValue(targetA.type) : 0;
+        const valB = targetB ? getPieceValue(targetB.type) : 0;
+        return valB - valA;
+      });
+  return sorted.slice(0, AiService.MAX_BRANCHING);
+    };
+
+    // Quiescence search: solo expandir capturas si depth == 0 y hay capturas disponibles
+    if (depth === 0) {
+      let result: number;
+      // Si hay capturas posibles, seguir expandiendo solo capturas
+      const color = maximizingPlayer ? PieceColor.Black : PieceColor.White;
+      if (isCaptureMoveAvailable(board, color)) {
+        const moves: AiMove[] = [];
+        const pieces = getAllPiecesForColor(board, color);
+        for (const p of pieces) {
+          const targets = this.getValidMovesForPieceWithRules(board, p);
+          for (const t of targets) {
+            const target = getPieceAtPosition(board, t);
+            if (target && target.color !== color) {
+              moves.push({ from: p, to: t, score: 0 });
+            }
+          }
+        }
+        const orderedMoves = orderMoves(moves, board);
+        if (maximizingPlayer) {
+          let value = -Infinity;
+          for (const m of orderedMoves) {
+            const nb = this.simulateMove(board, m.from, m.to);
+            value = Math.max(value, this.minimaxAlphaBeta(nb, 0, alpha, beta, false));
+            alpha = Math.max(alpha, value);
+            if (alpha >= beta) break;
+          }
+          result = value === -Infinity ? evaluateBoard(board) : value;
+        } else {
+          let value = Infinity;
+          for (const m of orderedMoves) {
+            const nb = this.simulateMove(board, m.from, m.to);
+            value = Math.min(value, this.minimaxAlphaBeta(nb, 0, alpha, beta, true));
+            beta = Math.min(beta, value);
+            if (beta <= alpha) break;
+          }
+          result = value === Infinity ? evaluateBoard(board) : value;
+        }
+      } else {
+        // Si no hay capturas, evaluar normalmente
+        result = evaluateBoard(board);
+      }
+      this.transpositionTable.set(cacheKey, result);
+      return result;
     }
 
     if (maximizingPlayer) {
@@ -269,15 +392,22 @@ export class AiService {
         for (const t of targets) moves.push({ from: p, to: t, score: 0 });
       }
 
-      if (moves.length === 0) return this.minimaxAlphaBeta(board, 0, alpha, beta, false);
+      if (moves.length === 0) {
+        const result = this.minimaxAlphaBeta(board, 0, alpha, beta, false);
+        this.transpositionTable.set(cacheKey, result);
+        return result;
+      }
+
+      const orderedMoves = orderMoves(moves, board);
 
       let value = -Infinity;
-      for (const m of moves) {
+      for (const m of orderedMoves) {
         const nb = this.simulateMove(board, m.from, m.to);
         value = Math.max(value, this.minimaxAlphaBeta(nb, depth - 1, alpha, beta, false));
         alpha = Math.max(alpha, value);
         if (alpha >= beta) break;
       }
+      this.transpositionTable.set(cacheKey, value);
       return value;
     } else {
       const moves: AiMove[] = [];
@@ -287,15 +417,22 @@ export class AiService {
         for (const t of targets) moves.push({ from: p, to: t, score: 0 });
       }
 
-      if (moves.length === 0) return this.minimaxAlphaBeta(board, 0, alpha, beta, true);
+      if (moves.length === 0) {
+        const result = this.minimaxAlphaBeta(board, 0, alpha, beta, true);
+        this.transpositionTable.set(cacheKey, result);
+        return result;
+      }
+
+      const orderedMoves = orderMoves(moves, board);
 
       let value = Infinity;
-      for (const m of moves) {
+      for (const m of orderedMoves) {
         const nb = this.simulateMove(board, m.from, m.to);
         value = Math.min(value, this.minimaxAlphaBeta(nb, depth - 1, alpha, beta, true));
         beta = Math.min(beta, value);
         if (beta <= alpha) break;
       }
+      this.transpositionTable.set(cacheKey, value);
       return value;
     }
   }
