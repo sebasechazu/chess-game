@@ -47,7 +47,7 @@ import { AiService } from './ai.service';
 export class AppService {
   public board: WritableSignal<ChessSquare[][]> = signal(createEmptyBoard());
   public currentTurn = signal<PieceColor>(PieceColor.White);
-  public aiDifficulty = signal<1 | 2 | 3 | 4>(4); // Siempre nivel máximo
+  // Dificultad eliminada: IA siempre juega a nivel fijo
   public aiEnabled = signal<boolean>(true);
   public moveHistory = signal<string[]>([]);
   public totalMovements = signal<number>(0);
@@ -400,8 +400,7 @@ export class AppService {
   // ---------------------------
   private makeAiMove(): void {
     const board = this.board();
-    const difficulty = this.aiDifficulty();
-    const bestMove = this.aiService.findBestMove(board, difficulty);
+  const bestMove = this.aiService.findBestMove(board);
     if (bestMove) this.makeMove(bestMove.from, bestMove.to);
   }
 
@@ -443,7 +442,7 @@ export class AppService {
         score,
         winner: winner as import('../helpers/interfaces').WinnerType,
         moves: this.totalMovements(),
-        difficulty: this.normalizeDifficulty(),
+  // dificultad eliminada
         date: new Date().toISOString()
       };
       this.scoreHistory.update(h => [entry, ...h].slice(0, 50));
@@ -455,9 +454,7 @@ export class AppService {
 
   private computeScore(winner: PieceColor): number {
     const base = 100;
-    const difficulty = this.aiDifficulty();
-  const diff = this.normalizeDifficulty();
-  const difficultyMultiplier = diff === 1 ? 1 : diff === 2 ? 1.5 : diff === 3 ? 2 : 2.5;
+    const difficultyMultiplier = 2.5;
     const moves = this.totalMovements() || 0;
     const efficiency = Math.max(0.2, (20 - moves) / 20);
     const winnerCaptures = winner === PieceColor.White ? this.whiteCaptures() : this.blackCaptures();
@@ -467,12 +464,5 @@ export class AppService {
     return Math.max(0, Math.round(raw));
   }
 
-  private normalizeDifficulty(): 1 | 2 | 3 | 4 {
-    const d = this.aiDifficulty();
-    if (typeof d === 'number') return (Math.max(1, Math.min(4, Math.floor(d))) as 1 | 2 | 3 | 4);
-    if (d === 'easy') return 1;
-    if (d === 'medium') return 2;
-    if (d === 'hard') return 3;
-    return 4;
-  }
+  // Método de normalización de dificultad eliminado
 }

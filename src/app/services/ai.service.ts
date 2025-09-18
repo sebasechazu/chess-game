@@ -21,8 +21,7 @@ import {
   PieceColor,
   ChessSquare,
   AiMove,
-  Position,
-  AiDifficulty
+  Position
 } from '../helpers/interfaces';
 import {
   isValidPawnMove,
@@ -61,7 +60,7 @@ export class AiService {
   this.transpositionTable.clear();
   }
 
-  public findBestMove(board: ChessSquare[][], difficulty: AiDifficulty): AiMove | null {
+  public findBestMove(board: ChessSquare[][]): AiMove | null {
 
     const blackPieces = getAllPiecesForColor(board, PieceColor.Black);
     const possibleMoves: AiMove[] = [];
@@ -69,7 +68,7 @@ export class AiService {
     for (const piecePos of blackPieces) {
       const validMoves = this.getValidMovesForPieceWithRules(board, piecePos);
       for (const targetPos of validMoves) {
-        const baseScore = this.evaluateMove(board, piecePos, targetPos, difficulty);
+        const baseScore = this.evaluateMove(board, piecePos, targetPos);
         possibleMoves.push({ from: piecePos, to: targetPos, score: baseScore });
       }
     }
@@ -85,30 +84,11 @@ export class AiService {
 
     possibleMoves.sort((a, b) => b.score - a.score);
 
-    // normalize difficulty to numeric level for searches/effects
-    const diffLevel = typeof difficulty === 'number' ? difficulty : (
-      difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : difficulty === 'hard' ? 3 : 4
-    );
-
-    // Profundidad máxima por dificultad (más baja para mejor rendimiento)
-    const depthForLevel: Record<number, number> = { 1: 1, 2: 2, 3: 2, 4: 3 };
-    const depth = depthForLevel[diffLevel] || 2;
-
-    if (diffLevel === 1) {
-      const topN = Math.max(1, Math.floor(possibleMoves.length * 0.2));
-      const slice = possibleMoves.slice(0, topN);
-      return slice[Math.floor(Math.random() * slice.length)];
-    }
-
-    if (diffLevel === 2) {
-      return possibleMoves[0];
-    }
-
-    // Hard / Very-hard: minimax con profundidad limitada y ramas limitadas
+    // Profundidad y ramas fijas
+    const depth = 2;
     let bestMove: AiMove | null = null;
     let bestScore = -Infinity;
-    // Limitar cantidad de ramas a evaluar
-  const limitedMoves = possibleMoves.slice(0, AiService.MAX_BRANCHING);
+    const limitedMoves = possibleMoves.slice(0, AiService.MAX_BRANCHING);
     for (const m of limitedMoves) {
       const nb = this.simulateMove(board, m.from, m.to);
       const score = this.minimaxAlphaBeta(nb, depth - 1, -Infinity, Infinity, false);
@@ -118,7 +98,6 @@ export class AiService {
         bestMove = { ...m, score: finalScore };
       }
     }
-
     return bestMove || limitedMoves[0];
   }
 
@@ -177,7 +156,7 @@ export class AiService {
     return hash.toString(16);
   }
 
-  private evaluateMove(board: ChessSquare[][], from: Position, to: Position, difficulty: AiDifficulty): number {
+  private evaluateMove(board: ChessSquare[][], from: Position, to: Position): number {
     let score = 0;
 
     const movingPiece = getPieceAtPosition(board, from);
@@ -212,11 +191,7 @@ export class AiService {
       score += 1;
     }
 
-    const diffLevel = typeof difficulty === 'number' ? difficulty : (
-      difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : difficulty === 'hard' ? 3 : 4
-    );
-    const randMultiplier = diffLevel === 1 ? 1 : diffLevel === 2 ? 0.2 : 0;
-    score += Math.random() * 0.5 * randMultiplier;
+    score += Math.random() * 0.1;
 
     return score;
   }

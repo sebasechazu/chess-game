@@ -124,9 +124,6 @@ export class HeaderGameComponent {
     }
   }
 
-  getDifficultyLabel(): string {
-    return 'Muy difícil'; // Siempre nivel máximo
-  }
 
   /**
    * Devuelve información sobre si hay un aviso de jaque activo.
