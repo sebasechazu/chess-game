@@ -3,7 +3,6 @@ import { AppService } from '../services/app.service';
 import { CommonModule } from '@angular/common';
 import { ChessBoardComponent } from './chess-board/chess-board.component';
 import { ModalGameComponent } from '../shared/modal-game/modal-game.component';
-import { SpinnerGameComponent } from '../shared/spinner-game/spinner-game.component';
 import { HistoryGameComponent } from '../shared/history-game/history-game.component';
 import { HeaderGameComponent } from '../shared/header-game/header-game.component';
 
@@ -19,7 +18,6 @@ import { HeaderGameComponent } from '../shared/header-game/header-game.component
     ChessBoardComponent,
     ModalGameComponent,
     HeaderGameComponent,
-    SpinnerGameComponent,
     HistoryGameComponent
   ]
 })

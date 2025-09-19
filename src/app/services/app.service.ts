@@ -26,14 +26,8 @@ import {
   placePiece
 } from '../helpers/chess-utils';
 
-import {
-  isValidPawnMove,
-  isValidRookMove,
-  isValidKnightMove,
-  isValidBishopMove,
-  isValidQueenMove,
-  isValidKingMove
-} from '../helpers/chess-rules';
+import { isValidMove } from '../helpers/chess-basic-validation';
+import { isKingInCheck, isCheckmate, isStalemate, isLegalMove } from '../helpers/chess-advanced-rules';
 
 import { AiService } from './ai.service';
 
@@ -62,7 +56,6 @@ export class AppService {
   public lastGameScore = signal<number>(0);
   public scoreHistory = signal<any[]>([]);
   public gameInitialized = signal<boolean>(false);
-  public isLoading = signal<boolean>(false);
 
   constructor(private aiService: AiService) {
     // animación inicial corta
@@ -103,7 +96,9 @@ export class AppService {
 
     // programar IA cuando corresponda
     effect(() => {
-      if (this.shouldAiMove()) this.scheduleAiMove();
+      if (this.shouldAiMove()) {
+        this.scheduleAiMove();
+      }
     });
   }
 
@@ -115,19 +110,8 @@ export class AppService {
   // Reglas y validaciones
   // ---------------------------
   private isValidMoveByRules(board: ChessSquare[][], piece: ChessPiece, from: [number, number], to: [number, number]): boolean {
-    const [toRow, toCol] = to;
-    if (toRow < 0 || toRow >= 8 || toCol < 0 || toCol >= 8) return false;
-    const targetPiece = board[toRow][toCol].piece;
-    if (targetPiece && targetPiece.color === piece.color) return false;
-    switch (piece.type) {
-      case PieceType.Pawn: return isValidPawnMove(board, piece, from, to);
-      case PieceType.Rook: return isValidRookMove(board, piece, from, to);
-      case PieceType.Knight: return isValidKnightMove(board, piece, from, to);
-      case PieceType.Bishop: return isValidBishopMove(board, piece, from, to);
-      case PieceType.Queen: return isValidQueenMove(board, piece, from, to);
-      case PieceType.King: return isValidKingMove(board, piece, from, to);
-      default: return false;
-    }
+    // Usar la función consolidada de validación
+    return isValidMove(board, piece, from, to);
   }
 
   private validateTurn(fromPos: Position): { valid: boolean; error?: string } {
@@ -177,12 +161,18 @@ export class AppService {
   // ---------------------------
   public makeMove(fromPos: Position, toPos: Position): MoveResult {
     const turnCheck = this.validateTurn(fromPos);
-    if (!turnCheck.valid) return { success: false, error: turnCheck.error };
+    if (!turnCheck.valid) {
+      return { success: false, error: turnCheck.error };
+    }
     const board = this.board();
-    if (!this.isValidMoveComplete(board, fromPos, toPos)) return { success: false, error: 'Movimiento inválido' };
+    if (!this.isValidMoveComplete(board, fromPos, toPos)) {
+      return { success: false, error: 'Movimiento inválido' };
+    }
     const targetPiece = getPieceAtPosition(board, toPos);
     const result = this.performMoveWithResult(fromPos, toPos, targetPiece || null);
-    if (!result.success) return result;
+    if (!result.success) {
+      return result;
+    }
     // El effect se encarga de detectar el cambio y actualizar el estado del juego
     return result;
   }
@@ -320,7 +310,15 @@ export class AppService {
   private scheduleAiMove(): void {
     if (this.aiMoveInProgress) return;
     this.aiMoveInProgress = true;
-    setTimeout(() => { this.makeAiMove(); this.aiMoveInProgress = false; }, 800);
+    setTimeout(async () => { 
+      try {
+        await this.makeAiMove(); 
+      } catch (error) {
+        // Silenciar error de movimiento de IA
+      } finally {
+        this.aiMoveInProgress = false; 
+      }
+    }, 800);
   }
 
   // ---------------------------
@@ -338,7 +336,6 @@ export class AppService {
   public resetGame(): void { this.initializeGame(); }
 
   private resetGameState(): void {
-    this.isLoading.set(true);
     this.currentTurn.set(PieceColor.White);
     this.gameOver.set(false);
     this.winnerColor.set(null);
@@ -355,7 +352,6 @@ export class AppService {
   }
 
   private finalizeGameInitialization(): void {
-    this.isLoading.set(false);
     this.gameInitialized.set(true);
     this.showInitialAnimations.set(true);
     setTimeout(() => this.showInitialAnimations.set(false), 2000);
@@ -389,6 +385,8 @@ export class AppService {
 
   public readonly isGameActive = computed(() => this.gameInitialized() && !this.gameOver());
 
+  // Estado de procesamiento de la IA (delegado al AiService)
+  public readonly isAiThinking = computed(() => this.aiService.isProcessing());
 
   private updateCaptures(capturedColor: PieceColor): void {
     if (capturedColor === PieceColor.White) this.whiteCaptures.update(v => v + 1);
@@ -398,33 +396,64 @@ export class AppService {
   // ---------------------------
   // Delegación IA
   // ---------------------------
-  private makeAiMove(): void {
+  private async makeAiMove(): Promise<void> {
     const board = this.board();
-  const bestMove = this.aiService.findBestMove(board);
-    if (bestMove) this.makeMove(bestMove.from, bestMove.to);
+    try {
+      const bestMove = await this.aiService.findBestMove(board);
+      if (bestMove) {
+        const result = this.makeMove(bestMove.from, bestMove.to);
+      } else {
+      }
+    } catch (error) {
+      // Silenciar error de movimiento de IA
+    }
   }
 
   public getValidMovesForPiece(board: ChessSquare[][], position: Position): Position[] {
-    return this.aiService.getValidMovesForPieceWithRules(board, position);
+    return this.getValidMovesForPieceWithRules(board, position);
+  }
+
+  private getValidMovesForPieceWithRules(board: ChessSquare[][], position: Position): Position[] {
+    const validMoves: Position[] = [];
+    const piece = getPieceAtPosition(board, position);
+    if (!piece) return validMoves;
+
+    const fromCoords = positionToCoordinates(position);
+
+    for (const row of board) {
+      for (const square of row) {
+        if (position === square.position) continue;
+        const toCoords = positionToCoordinates(square.position);
+        if (this.isValidMoveByRules(board, piece, [fromCoords.row, fromCoords.col], [toCoords.row, toCoords.col])) {
+          validMoves.push(square.position);
+        }
+      }
+    }
+
+    return validMoves;
   }
 
   private checkGameStatus(): void {
     const currentBoard = this.board();
     const kingsExist = findKings(currentBoard);
-  if (!kingsExist.white) { this.endGame(PieceColor.Black); return; }
-  if (!kingsExist.black) { this.endGame(PieceColor.White); return; }
-    const whiteKingPos = this.findKingPosition(currentBoard, PieceColor.White);
-    const blackKingPos = this.findKingPosition(currentBoard, PieceColor.Black);
-    let whiteInCheck = false; let blackInCheck = false;
-    if (whiteKingPos) {
-      const opponents = getAllPiecesForColor(currentBoard, PieceColor.Black);
-      for (const p of opponents) { const moves = this.aiService.getValidMovesForPieceWithRules(currentBoard, p); if (moves.includes(whiteKingPos)) { whiteInCheck = true; break; } }
+    if (!kingsExist.white) { this.endGame(PieceColor.Black); return; }
+    if (!kingsExist.black) { this.endGame(PieceColor.White); return; }
+    
+    // Usar las funciones consolidadas de validación
+    const whiteInCheck = isKingInCheck(currentBoard, PieceColor.White);
+    const blackInCheck = isKingInCheck(currentBoard, PieceColor.Black);
+    
+    this.whiteInCheck.set(whiteInCheck);
+    this.blackInCheck.set(blackInCheck);
+    
+    // Verificar jaque mate o empate
+    if (whiteInCheck && isCheckmate(currentBoard, PieceColor.White)) {
+      this.endGame(PieceColor.Black);
+    } else if (blackInCheck && isCheckmate(currentBoard, PieceColor.Black)) {
+      this.endGame(PieceColor.White);
+    } else if (isStalemate(currentBoard, this.currentTurn())) {
+      this.endGame(null); // Empate
     }
-    if (blackKingPos) {
-      const opponents = getAllPiecesForColor(currentBoard, PieceColor.White);
-      for (const p of opponents) { const moves = this.aiService.getValidMovesForPieceWithRules(currentBoard, p); if (moves.includes(blackKingPos)) { blackInCheck = true; break; } }
-    }
-    this.whiteInCheck.set(whiteInCheck); this.blackInCheck.set(blackInCheck);
   }
 
   private findKingPosition(board: ChessSquare[][], color: PieceColor): Position | null {
@@ -432,11 +461,11 @@ export class AppService {
     return null;
   }
 
-  private endGame(winner: PieceColor): void {
+  private endGame(winner: PieceColor | null): void {
     this.gameOver.set(true);
     this.winnerColor.set(winner);
     try {
-      const score = this.computeScore(winner);
+      const score = winner ? this.computeScore(winner) : 50; // Empate = 50 puntos
       this.lastGameScore.set(score);
       const entry: import('../helpers/interfaces').ScoreEntry = {
         score,

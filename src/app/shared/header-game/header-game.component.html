@@ -176,6 +176,18 @@
     </div>
     }
 
+    <!-- Banner sutil para IA pensando -->
+    @if (aiThinking && aiEnabled) {
+    <div class="w-full mb-2">
+      <div class="flex items-center justify-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-center text-sm py-2 px-3 rounded-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-spin">
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="15 5"/>
+        </svg>
+        <span class="font-medium">IA analizando movimientos...</span>
+      </div>
+    </div>
+    }
+
     <!-- Botones -->
     <div class="flex-shrink-0" [class.w-full]="isVertical" [class.mt-auto]="isVertical">
   <div class="grid gap-2" [class.grid-cols-2]="!isVertical" [class.grid-cols-1]="isVertical">
@@ -186,6 +198,12 @@
           [class.shadow-md]="isVertical">
           <span class="text-sm flex items-center justify-center gap-1">
             @if (aiEnabled) {
+            @if (aiThinking) {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-spin">
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="15 5"/>
+            </svg>
+            IA PENSANDO...
+            } @else {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" [@toggleRotate]="aiEnabled">
               <path
                 d="M12 2C13.1046 2 14 2.89543 14 4V6H16C17.1046 6 18 6.89543 18 8V10C18 11.1046 17.1046 12 16 12H14V14C14 15.1046 13.1046 16 12 16C10.8954 16 10 15.1046 10 14V12H8C6.89543 12 6 11.1046 6 10V8C6 6.89543 6.89543 6 8 6H10V4C10 2.89543 10.8954 2 12 2Z"
@@ -196,7 +214,8 @@
                 d="M12 18C12 19.1046 12.8954 20 14 20H18C19.1046 20 20 20.8954 20 22H4C4 20.8954 4.89543 20 6 20H10C11.1046 20 12 19.1046 12 18Z"
                 fill="currentColor" />
             </svg>
-            IA ACTIVADA (NIVEL MÁXIMO)
+            IA ACTIVADA
+            } 
             } @else {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" [@toggleRotate]="aiEnabled">
               <path

@@ -1,16 +1,12 @@
 <div class="w-screen h-screen flex flex-col items-center justify-center bg-gray-100 overflow-hidden">
-  @if (chessService.isLoading()) {
-  <app-spinner-game />
-  }
-
-  @if (!chessService.isLoading() && chessService.gameInitialized()) {
+  @if (chessService.gameInitialized()) {
   <!-- Layout móvil -->
   <div
     class="w-full max-w-4xl flex flex-col gap-1 items-center justify-center px-2 py-2 md:hidden h-full overflow-auto">
     <app-header-game class="w-full flex-shrink-0" [currentTurn]="chessService.currentTurn()"
       [totalMovements]="chessService.totalMovements()" [whiteCaptures]="chessService.whiteCaptures()"
       [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
-      [aiEnabled]="chessService.aiEnabled()"
+      [aiEnabled]="chessService.aiEnabled()" [aiThinking]="chessService.isAiThinking()"
       [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
       [onReset]="onReset.bind(this)" (toggleAi)="onToggleAi($event)"
       (clearHistory)="chessService.clearScoreHistory()" />
@@ -34,7 +30,7 @@
         <app-header-game class="w-full h-full" [currentTurn]="chessService.currentTurn()"
           [totalMovements]="chessService.totalMovements()" [whiteCaptures]="chessService.whiteCaptures()"
           [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
-          [aiEnabled]="chessService.aiEnabled()"
+          [aiEnabled]="chessService.aiEnabled()" [aiThinking]="chessService.isAiThinking()"
           [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
           [onReset]="onReset.bind(this)" [isVertical]="true" (toggleAi)="onToggleAi($event)"
           (clearHistory)="chessService.clearScoreHistory()" />

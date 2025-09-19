@@ -84,6 +84,7 @@ export class HeaderGameComponent {
   @Input() whiteCaptures!: number;
   @Input() blackCaptures!: number;
   @Input() aiEnabled!: boolean;
+  @Input() aiThinking!: boolean;
   @Input() whiteInCheck!: boolean;
   @Input() blackInCheck!: boolean;
   @Input() scoreHistory: import('../../helpers/interfaces').ScoreEntry[] = [];
