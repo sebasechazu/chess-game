@@ -1,16 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
-import {
-  ChessSquare,
-  AiMove,
-  Position,
-  PieceColor
-} from '../helpers/interfaces';
+import { ChessSquare, AiMove, Position, PieceColor } from '../helpers/interfaces';
 import { getAllPiecesForColor } from '../helpers/chess-core-utils';
-import { 
-  getPieceAtPosition, 
-  positionToCoordinates, 
-  isValidMove 
-} from '../helpers/chess-basic-validation';
+import { getPieceAtPosition, positionToCoordinates, isValidMove } from '../helpers/chess-basic-validation';
 
 /**
  * Interface para el estado de un worker individual
@@ -37,6 +28,8 @@ interface PartialTask {
  */
 @Injectable({ providedIn: 'root' })
 export class WorkerPoolService {
+
+  // Estado de los workers en el pool
   private workers: WorkerState[] = [];
   private readonly maxWorkers: number;
   private workerPromises = new Map<string, { resolve: Function; reject: Function }>();
@@ -58,13 +51,13 @@ export class WorkerPoolService {
   });
 
   constructor() {
-    // Determinar número óptimo de workers basado en CPU cores
     this.maxWorkers = Math.max(2, Math.min(navigator.hardwareConcurrency || 4, 8));
     this.initializeWorkerPool();
   }
 
   /**
    * Inicializa el pool de workers
+   * Maneja casos donde los Web Workers no están disponibles
    */
   private initializeWorkerPool(): void {
     if (typeof Worker === 'undefined') {
@@ -75,7 +68,7 @@ export class WorkerPoolService {
     for (let i = 0; i < this.maxWorkers; i++) {
       try {
         const worker = new Worker(new URL('../workers/ai.worker', import.meta.url));
-        
+
         const workerState: WorkerState = {
           worker,
           isBusy: false
@@ -96,15 +89,17 @@ export class WorkerPoolService {
 
   /**
    * Maneja mensajes de los workers
+   * Resuelve o rechaza promesas asociadas a tareas específicas
+   * @param event - Evento de mensaje del worker
+   * @param workerIndex - Índice del worker que envió el mensaje
    */
   private handleWorkerMessage(event: MessageEvent, workerIndex: number): void {
     const { type, move, moves, error, messageId } = event.data;
-    
+
     if (messageId && this.workerPromises.has(messageId)) {
       const promise = this.workerPromises.get(messageId)!;
       this.workerPromises.delete(messageId);
 
-      // Liberar el worker
       if (this.workers[workerIndex]) {
         this.workers[workerIndex].isBusy = false;
         this.workers[workerIndex].currentTask = undefined;
@@ -123,18 +118,18 @@ export class WorkerPoolService {
 
   /**
    * Maneja errores de los workers
+   * Reinicia el worker y rechaza promesas pendientes
+   * @param error - Evento de error del worker
+   * @param workerIndex - Índice del worker que tuvo el error
    */
   private handleWorkerError(error: ErrorEvent, workerIndex: number): void {
     console.error(`Error en worker ${workerIndex}:`, error);
-    
-    // Liberar el worker con error
     if (this.workers[workerIndex]) {
       this.workers[workerIndex].isBusy = false;
       this.workers[workerIndex].currentTask = undefined;
       this.updateActiveWorkers();
     }
 
-    // Rechazar promesas pendientes de este worker
     for (const [messageId, promise] of this.workerPromises.entries()) {
       if (messageId.includes(`_w${workerIndex}_`)) {
         promise.reject(new Error('Worker error'));
@@ -145,6 +140,9 @@ export class WorkerPoolService {
 
   /**
    * Encuentra el mejor movimiento distribuyendo la carga entre workers
+   * Incluye manejo de errores y timeouts para robustez
+   * @param board - Estado actual del tablero
+   * @returns el mejor movimiento encontrado o null si no hay movimientos
    */
   public async findBestMove(board: ChessSquare[][]): Promise<AiMove | null> {
     if (this.workers.length === 0) {
@@ -160,7 +158,7 @@ export class WorkerPoolService {
       });
 
       const calculationPromise = this.performCalculation(board);
-      
+
       // Race entre cálculo y timeout
       const result = await Promise.race([calculationPromise, timeoutPromise]);
       return result;
@@ -175,29 +173,29 @@ export class WorkerPoolService {
 
   /**
    * Realiza el cálculo real del movimiento
+   * Distribuye la carga entre workers según la complejidad
+   * @param board - Estado actual del tablero
+   * @returns el mejor movimiento encontrado o null si no hay movimientos
    */
   private async performCalculation(board: ChessSquare[][]): Promise<AiMove | null> {
-    // Obtener todos los movimientos posibles para las piezas negras
     const allPossibleMoves = this.getAllPossibleMoves(board);
-    
+
     if (allPossibleMoves.length === 0) {
       return null;
     }
-
-    // Si hay pocos movimientos, usar un solo worker
     if (allPossibleMoves.length <= 8) {
       return await this.processSingleWorker(board);
     }
 
-    // Dividir movimientos entre workers disponibles
     const results = await this.processMultipleWorkers(board, allPossibleMoves);
-    
-    // Encontrar el mejor movimiento de todos los resultados
+
     return this.findBestFromResults(results);
   }
 
   /**
    * Obtiene todos los movimientos posibles para las piezas negras
+   * @param board - Estado actual del tablero
+   * @returns lista de movimientos posibles
    */
   private getAllPossibleMoves(board: ChessSquare[][]): AiMove[] {
     const blackPieces = getAllPiecesForColor(board, PieceColor.Black);
@@ -215,6 +213,8 @@ export class WorkerPoolService {
 
   /**
    * Procesa usando un solo worker (para casos simples)
+   * @param board - Estado actual del tablero
+   * @returns el mejor movimiento encontrado o null si no hay movimientos
    */
   private async processSingleWorker(board: ChessSquare[][]): Promise<AiMove | null> {
     const availableWorker = this.getAvailableWorker();
@@ -223,7 +223,7 @@ export class WorkerPoolService {
     }
 
     const messageId = `single_${++this.messageId}_w${this.workers.indexOf(availableWorker)}`;
-    
+
     const promise = new Promise<AiMove | null>((resolve, reject) => {
       this.workerPromises.set(messageId, { resolve, reject });
     });
@@ -243,16 +243,18 @@ export class WorkerPoolService {
 
   /**
    * Procesa usando múltiples workers dividiendo la carga
+   * @param board - Estado actual del tablero
+   * @param allMoves - Todos los movimientos posibles a evaluar
+   * @returns lista de movimientos evaluados por todos los workers
    */
   private async processMultipleWorkers(board: ChessSquare[][], allMoves: AiMove[]): Promise<AiMove[]> {
     const availableWorkers = this.getAvailableWorkers();
     const numWorkers = Math.min(availableWorkers.length, allMoves.length);
-    
+
     if (numWorkers === 0) {
       throw new Error('No hay workers disponibles');
     }
 
-    // Dividir movimientos entre workers
     const movesPerWorker = Math.ceil(allMoves.length / numWorkers);
     const tasks: Promise<AiMove[]>[] = [];
 
@@ -274,15 +276,20 @@ export class WorkerPoolService {
 
   /**
    * Procesa un conjunto de movimientos en un worker específico
+   * @param workerState - Estado del worker a usar
+   * @param board - Estado actual del tablero
+   * @param moves - Movimientos a evaluar
+   * @param workerIndex - Índice del worker (para IDs de mensajes)
+   * @returns lista de movimientos evaluados por el worker
    */
   private async processMovesInWorker(
-    workerState: WorkerState, 
-    board: ChessSquare[][], 
-    moves: AiMove[], 
+    workerState: WorkerState,
+    board: ChessSquare[][],
+    moves: AiMove[],
     workerIndex: number
   ): Promise<AiMove[]> {
     const messageId = `batch_${++this.messageId}_w${workerIndex}`;
-    
+
     const promise = new Promise<AiMove[]>((resolve, reject) => {
       this.workerPromises.set(messageId, { resolve, reject });
     });
@@ -303,6 +310,8 @@ export class WorkerPoolService {
 
   /**
    * Encuentra el mejor movimiento de todos los resultados
+   * @param results - Lista de movimientos evaluados
+   * @returns el movimiento con el mejor puntaje o null si no hay resultados
    */
   private findBestFromResults(results: AiMove[]): AiMove | null {
     if (results.length === 0) return null;
@@ -314,6 +323,7 @@ export class WorkerPoolService {
 
   /**
    * Obtiene un worker disponible
+   * @return un worker libre o null si todos están ocupados
    */
   private getAvailableWorker(): WorkerState | null {
     return this.workers.find(w => !w.isBusy) || null;
@@ -321,6 +331,7 @@ export class WorkerPoolService {
 
   /**
    * Obtiene todos los workers disponibles
+   * @return lista de workers libres
    */
   private getAvailableWorkers(): WorkerState[] {
     return this.workers.filter(w => !w.isBusy);
@@ -328,6 +339,7 @@ export class WorkerPoolService {
 
   /**
    * Actualiza el contador de workers activos
+   * Debe llamarse cada vez que cambia el estado de un worker
    */
   private updateActiveWorkers(): void {
     const active = this.workers.filter(w => w.isBusy).length;
@@ -336,6 +348,9 @@ export class WorkerPoolService {
 
   /**
    * Obtiene movimientos válidos para una pieza
+   * @param board - Estado actual del tablero
+   * @param position - Posición de la pieza (e.g. 'e2')
+   * @returns lista de posiciones destino válidas
    */
   private getValidMovesForPiece(board: ChessSquare[][], position: Position): Position[] {
     const validMoves: Position[] = [];
@@ -360,9 +375,12 @@ export class WorkerPoolService {
 
   /**
    * Clona el tablero de forma segura
+   * Evita mutaciones accidentales al enviarlo a workers
+   * @param board - Estado actual del tablero
+   * @returns una copia profunda del tablero
    */
   private cloneBoard(board: ChessSquare[][]): ChessSquare[][] {
-    return board.map(row => 
+    return board.map(row =>
       row.map(square => ({
         ...square,
         piece: square.piece ? { ...square.piece } : null
@@ -372,6 +390,7 @@ export class WorkerPoolService {
 
   /**
    * Limpia el cache de todos los workers
+   * Forzar limpieza manual si es necesario
    */
   public clearCache(): void {
     this.workers.forEach(workerState => {
@@ -383,6 +402,8 @@ export class WorkerPoolService {
 
   /**
    * Obtiene información del estado del pool
+   * Incluye número de workers, estado y métricas básicas
+   * @returns un objeto con detalles del pool
    */
   public getPoolInfo(): {
     totalWorkers: number;
@@ -400,6 +421,7 @@ export class WorkerPoolService {
 
   /**
    * Destruye todos los workers cuando el servicio se destruye
+   * Previene fugas de memoria y procesos colgados
    */
   public ngOnDestroy(): void {
     this.workers.forEach(workerState => {

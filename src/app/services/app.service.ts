@@ -9,7 +9,8 @@ import {
   MoveData,
   Position,
   ModalData,
-  WinnerType
+  WinnerType,
+  ScoreEntry
 } from '../helpers/interfaces';
 
 import {
@@ -29,7 +30,7 @@ import {
 import { isValidMove } from '../helpers/chess-basic-validation';
 import { isKingInCheck, isCheckmate, isStalemate, isLegalMove } from '../helpers/chess-advanced-rules';
 
-import { AiService } from './ai.service';
+import { AiService, AiMoveResult } from './ai.service';
 
 /**
  * AppService: reemplazo modular y ligero de ChessService.
@@ -54,35 +55,52 @@ export class AppService {
   public winnerColor = signal<PieceColor | null>(null);
   public gameOver = signal<boolean>(false);
   public lastGameScore = signal<number>(0);
-  public scoreHistory = signal<any[]>([]);
+  public scoreHistory = signal<ScoreEntry[]>([]);
   public gameInitialized = signal<boolean>(false);
 
+  // Constantes de configuración
+  private readonly INITIAL_ANIMATION_DURATION = 1200;
+  private readonly AI_MOVE_DELAY = 800;
+  private readonly FINAL_ANIMATION_DURATION = 2000;
+  private readonly MAX_SCORE_HISTORY = 50;
+  private readonly VICTORY_MODAL_DELAY = 100;
+  private readonly DRAW_SCORE = 50;
+  private readonly SCORE_HISTORY_KEY = 'chess.scoreHistory.v1';
+  private readonly BOARD_SIZE = 8;
+  private readonly ASCII_LOWERCASE_A = 97;
+
   constructor(private aiService: AiService) {
-    // animación inicial corta
-    setTimeout(() => this.showInitialAnimations.set(false), 1200);
-    // efecto: validar estado cuando cambie el tablero
+    setTimeout(() => this.showInitialAnimations.set(false), this.INITIAL_ANIMATION_DURATION);
     effect(() => {
       const _ = this.board();
       this.checkGameStatus();
     });
 
-    // persistencia del historial de puntajes
     try {
       const raw = localStorage.getItem(this.SCORE_HISTORY_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as import('../helpers/interfaces').ScoreEntry[];
+        const parsed = JSON.parse(raw) as ScoreEntry[];
         if (Array.isArray(parsed)) this.scoreHistory.set(parsed);
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      console.error('Error al cargar el historial de puntajes:', e);
+    }
 
+    /**
+     * Guardar historial de puntajes en localStorage al cambiar
+     */
     effect(() => {
       try {
         const h = this.scoreHistory();
         localStorage.setItem(this.SCORE_HISTORY_KEY, JSON.stringify(h));
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        console.error('Error al guardar el historial de puntajes:', e);
+      }
     });
 
-    // detectar cambios prev->next en el tablero y procesar movimientos
+    /**
+     * Detectar cambios en el tablero y procesar movimientos
+     */
     effect(() => {
       const currentBoard = this.board();
       if (!this.gameInitialized() || currentBoard.length === 0) return;
@@ -102,18 +120,27 @@ export class AppService {
     });
   }
 
-  private SCORE_HISTORY_KEY = 'chess.scoreHistory.v1';
   private previousBoard: ChessSquare[][] = [];
   private aiMoveInProgress = false;
 
-  // ---------------------------
-  // Reglas y validaciones
-  // ---------------------------
+  /**
+   * Valida si un movimiento es legal según las reglas del ajedrez
+   * @param board - Estado actual del tablero
+   * @param piece - Pieza que se mueve
+   * @param from - Coordenadas origen [fila, columna]
+   * @param to - Coordenadas destino [fila, columna]
+   * @returns true si el movimiento es válido según las reglas, false en caso contrario
+   */
   private isValidMoveByRules(board: ChessSquare[][], piece: ChessPiece, from: [number, number], to: [number, number]): boolean {
     // Usar la función consolidada de validación
     return isValidMove(board, piece, from, to);
   }
 
+  /**
+   * Valida el turno del jugador actual
+   * @param fromPos - posición origen (e.g. 'e2')
+   * @returns un objeto con la validez del turno y un mensaje de error opcional
+   */
   private validateTurn(fromPos: Position): { valid: boolean; error?: string } {
     const piece = getPieceAtPosition(this.board(), fromPos);
     if (!piece) return { valid: false, error: 'No hay pieza en esa posición' };
@@ -121,6 +148,13 @@ export class AppService {
     return { valid: true };
   }
 
+  /***
+   * Valida un movimiento completo (reglas + turno)
+   * @param board - Estado actual del tablero
+   * @param fromPos - posición origen (e.g. 'e2')
+   * @param toPos - posición destino (e.g. 'e4')
+   * @returns true si el movimiento es válido, false en caso contrario
+   */
   private isValidMoveComplete(board: ChessSquare[][], fromPos: Position, toPos: Position): boolean {
     const fromCoords = positionToCoordinates(fromPos);
     const toCoords = positionToCoordinates(toPos);
@@ -129,12 +163,24 @@ export class AppService {
     return this.isValidMoveByRules(board, piece, [fromCoords.row, fromCoords.col], [toCoords.row, toCoords.col]);
   }
 
-  // Validar movimiento sin ejecutar
+
+  /**
+   * Valida un movimiento sin ejecutarlo
+   * @param fromPos - posición origen (e.g. 'e2')
+   * @param toPos - posición destino (e.g. 'e4')
+   * @returns un objeto con la validez del movimiento y un mensaje de error opcional
+   */
   public validateMove(fromPos: Position, toPos: Position): MoveResult {
     return this.validateMoveInternal(fromPos, toPos, false);
   }
 
-  // Interno: validar y opcionalmente ejecutar
+  /**
+   * Valida un movimiento (reglas + turno) y opcionalmente lo ejecuta
+   * @param fromPos - posición origen (e.g. 'e2')
+   * @param toPos - posición destino (e.g. 'e4')
+   * @param execute - si se debe ejecutar el movimiento
+   * @returns un objeto con la validez del movimiento y un mensaje de error opcional
+   */
   private validateMoveInternal(fromPos: Position, toPos: Position, execute: boolean): MoveResult {
     if (!this.isGameActive()) return { success: false, error: 'Juego no activo' };
     const turnValidation = this.validateTurn(fromPos);
@@ -156,9 +202,12 @@ export class AppService {
     return this.validateMoveInternal(fromPos, toPos, true);
   }
 
-  // ---------------------------
-  // Movimiento y estado
-  // ---------------------------
+  /**
+   * Realiza un movimiento en el tablero
+   * @param fromPos - posición origen (e.g. 'e2')
+   * @param toPos - posición destino (e.g. 'e4')
+   * @returns un objeto con el resultado del movimiento
+   */
   public makeMove(fromPos: Position, toPos: Position): MoveResult {
     const turnCheck = this.validateTurn(fromPos);
     if (!turnCheck.valid) {
@@ -173,10 +222,17 @@ export class AppService {
     if (!result.success) {
       return result;
     }
-    // El effect se encarga de detectar el cambio y actualizar el estado del juego
+
     return result;
   }
 
+  /**
+   * Realiza un movimiento en el tablero
+   * @param fromPos - posición origen (e.g. 'e2')
+   * @param toPos - posición destino (e.g. 'e4')
+   * @param capturedPiece - pieza capturada (si la hay)
+   * @returns un objeto con el resultado del movimiento
+   */
   private performMoveWithResult(fromPos: Position, toPos: Position, capturedPiece?: ChessPiece | null): MoveResult {
     const board = this.board();
     const newBoard = deepCloneBoard(board);
@@ -191,6 +247,11 @@ export class AppService {
     return { success: true, captured: targetPiece || undefined, moveType: targetPiece ? 'capture' : 'normal' };
   }
 
+  /**
+   * Actualiza el estado del juego después de un movimiento
+   * @param moveData - datos del movimiento realizado
+   * @returns void
+   */
   private updateGameStateAfterMove(moveData: MoveData): void {
     const { sourcePos, targetPos, movedPiece, capturedPiece } = moveData;
     if (!movedPiece || !sourcePos || !targetPos) return;
@@ -206,6 +267,9 @@ export class AppService {
 
   /**
    * Procesa un movimiento detectado y actualiza el estado del juego
+   * @param previousBoard - estado del tablero antes del movimiento
+   * @param currentBoard - estado del tablero después del movimiento
+   * @return void
    */
   private processMove(previousBoard: ChessSquare[][], currentBoard: ChessSquare[][]): void {
     const moveData = this.detectMove(previousBoard, currentBoard);
@@ -217,6 +281,9 @@ export class AppService {
 
   /**
    * Detecta movimientos comparando tableros de forma optimizada
+   * @param previousBoard - estado del tablero antes del movimiento
+   * @param currentBoard - estado del tablero después del movimiento
+   * @return MoveData - datos del movimiento detectado
    */
   private detectMove(previousBoard: ChessSquare[][], currentBoard: ChessSquare[][]): MoveData {
     let sourcePos = '';
@@ -226,19 +293,16 @@ export class AppService {
     let foundSource = false;
     let foundTarget = false;
 
-    for (let row = 0; row < 8 && (!foundSource || !foundTarget); row++) {
-      for (let col = 0; col < 8 && (!foundSource || !foundTarget); col++) {
+    for (let row = 0; row < this.BOARD_SIZE && (!foundSource || !foundTarget); row++) {
+      for (let col = 0; col < this.BOARD_SIZE && (!foundSource || !foundTarget); col++) {
         const prevPiece = previousBoard[row]?.[col]?.piece;
         const currentPiece = currentBoard[row]?.[col]?.piece;
 
-        // Buscar casilla origen (pieza desapareció)
         if (!foundSource && prevPiece && !currentPiece) {
           sourcePos = previousBoard[row][col].position;
           movedPiece = prevPiece;
           foundSource = true;
         }
-
-        // Buscar casilla destino (pieza apareció o cambió)
         if (!foundTarget) {
           if (!prevPiece && currentPiece) {
             targetPos = currentBoard[row][col].position;
@@ -257,12 +321,13 @@ export class AppService {
 
   /**
    * Configura la posición inicial de las piezas en el tablero
+   * @param board - tablero vacío a configurar
+   * @return void
    */
   private setupInitialPosition(board: ChessSquare[][]): void {
-    for (let col = 0; col < 8; col++) {
-      const file = String.fromCharCode(97 + col);
+    for (let col = 0; col < this.BOARD_SIZE; col++) {
+      const file = String.fromCharCode(this.ASCII_LOWERCASE_A + col);
 
-      // Piezas blancas
       placePiece(board, `${file}1`, {
         id: col + 1,
         type: INITIAL_PIECE_ORDER[col],
@@ -276,7 +341,6 @@ export class AppService {
         position: `${file}2`
       });
 
-      // Piezas negras
       placePiece(board, `${file}8`, {
         id: 17 + col,
         type: INITIAL_PIECE_ORDER[col],
@@ -292,38 +356,47 @@ export class AppService {
     }
   }
 
-  // ---------------------------
-  // Score history persistence
-  // ---------------------------
+  /**
+   * Limpia el historial de puntajes
+   * @return void
+   */
   public clearScoreHistory(): void {
     this.scoreHistory.set([]);
     try { localStorage.removeItem(this.SCORE_HISTORY_KEY); } catch (e) { /* ignore */ }
   }
 
-  // ---------------------------
-  // Scheduling IA
-  // ---------------------------
+  /**
+   * Determina si la IA debe mover en este turno
+   * @returns boolean - si la IA debe mover en este turno
+   */
   private shouldAiMove(): boolean {
     return this.currentTurn() === PieceColor.Black && this.isGameActive() && this.gameInitialized() && this.aiEnabled() && !this.aiMoveInProgress;
   }
 
+  /**
+   * Programa el movimiento de la IA con un retraso
+   * @returns void
+   */
   private scheduleAiMove(): void {
     if (this.aiMoveInProgress) return;
     this.aiMoveInProgress = true;
-    setTimeout(async () => { 
+    setTimeout(async () => {
       try {
-        await this.makeAiMove(); 
+        await this.makeAiMove();
       } catch (error) {
         // Silenciar error de movimiento de IA
       } finally {
-        this.aiMoveInProgress = false; 
+        this.aiMoveInProgress = false;
       }
-    }, 800);
+    }, this.AI_MOVE_DELAY);
   }
 
-  // ---------------------------
-  // Inicialización y reinicio
-  // ---------------------------
+
+  /**
+   * Inicializa una nueva partida de ajedrez
+   * Resetea el estado y configura la posición inicial
+   * @returns void
+   */
   public initializeGame(): void {
     this.resetGameState();
     const newBoard = createEmptyBoard();
@@ -333,8 +406,17 @@ export class AppService {
     this.finalizeGameInitialization();
   }
 
+  /**
+   * Reinicia la partida actual
+   * Resetea el estado y configura la posición inicial
+   * @returns void
+   */
   public resetGame(): void { this.initializeGame(); }
 
+  /**
+   * Resetea el estado del juego a valores iniciales
+   * @returns void
+   */
   private resetGameState(): void {
     this.currentTurn.set(PieceColor.White);
     this.gameOver.set(false);
@@ -351,15 +433,20 @@ export class AppService {
     this.lastGameScore.set(0);
   }
 
+  /**
+   * Finaliza la inicialización del juego mostrando animaciones iniciales
+   * @returns void
+   */
   private finalizeGameInitialization(): void {
     this.gameInitialized.set(true);
     this.showInitialAnimations.set(true);
-    setTimeout(() => this.showInitialAnimations.set(false), 2000);
+    setTimeout(() => this.showInitialAnimations.set(false), this.FINAL_ANIMATION_DURATION);
   }
 
-  // ---------------------------
-  // Computed helpers para UI
-  // ---------------------------
+  /**
+   * Computed helpers para UI
+   * @returns void
+   */
   public readonly victoryModalData = computed((): ModalData => {
     if (!this.showVictoryModal() || !this.gameOver()) {
       return { open: false, title: '', content: '' } as ModalData;
@@ -383,36 +470,61 @@ export class AppService {
     } as ModalData;
   });
 
+  /**
+   * Indica si el juego está activo (iniciado y no terminado)
+   * @returns boolean - si el juego está activo
+   */
   public readonly isGameActive = computed(() => this.gameInitialized() && !this.gameOver());
 
-  // Estado de procesamiento de la IA (delegado al AiService)
+  /**
+   * Estado de procesamiento de la IA (delegado al AiService)
+   * @returns boolean - si la IA está pensando
+   */
   public readonly isAiThinking = computed(() => this.aiService.isProcessing());
 
+  /**
+   * Actualiza el conteo de piezas capturadas
+   * @param capturedColor - color de la pieza capturada
+   */
   private updateCaptures(capturedColor: PieceColor): void {
     if (capturedColor === PieceColor.White) this.whiteCaptures.update(v => v + 1);
     else this.blackCaptures.update(v => v + 1);
   }
 
-  // ---------------------------
-  // Delegación IA
-  // ---------------------------
+  /**
+   * Realiza el movimiento de la IA consultando al AiService
+   * @returns void
+   */
   private async makeAiMove(): Promise<void> {
     const board = this.board();
     try {
-      const bestMove = await this.aiService.findBestMove(board);
-      if (bestMove) {
-        const result = this.makeMove(bestMove.from, bestMove.to);
+      const aiResult: AiMoveResult = await this.aiService.findBestMove(board);
+      if (aiResult.move) {
+        const result = this.makeMove(aiResult.move.from, aiResult.move.to);
       } else {
+        console.warn('No hay movimientos disponibles para la IA');
       }
     } catch (error) {
-      // Silenciar error de movimiento de IA
+      console.error('Error al calcular movimiento de IA:', error);
     }
   }
 
+  /**
+   * Obtiene los movimientos válidos para una pieza en el tablero
+   * @param board - El estado actual del tablero
+   * @param position - La posición de la pieza
+   * @returns Un array con las posiciones válidas a las que puede moverse la pieza
+   */
   public getValidMovesForPiece(board: ChessSquare[][], position: Position): Position[] {
     return this.getValidMovesForPieceWithRules(board, position);
   }
 
+  /**
+   * Obtiene los movimientos válidos para una pieza en el tablero
+   * @param board - El estado actual del tablero
+   * @param position - La posición de la pieza
+   * @returns Un array con las posiciones válidas a las que puede moverse la pieza
+   */
   private getValidMovesForPieceWithRules(board: ChessSquare[][], position: Position): Position[] {
     const validMoves: Position[] = [];
     const piece = getPieceAtPosition(board, position);
@@ -433,19 +545,24 @@ export class AppService {
     return validMoves;
   }
 
+  /**
+   * 
+   * Verifica el estado del juego: jaque, jaque mate, tablas
+   * Actualiza las señales correspondientes y finaliza el juego si es necesario
+   * @returns void
+   */
   private checkGameStatus(): void {
     const currentBoard = this.board();
     const kingsExist = findKings(currentBoard);
     if (!kingsExist.white) { this.endGame(PieceColor.Black); return; }
     if (!kingsExist.black) { this.endGame(PieceColor.White); return; }
-    
-    // Usar las funciones consolidadas de validación
+
     const whiteInCheck = isKingInCheck(currentBoard, PieceColor.White);
     const blackInCheck = isKingInCheck(currentBoard, PieceColor.Black);
-    
+
     this.whiteInCheck.set(whiteInCheck);
     this.blackInCheck.set(blackInCheck);
-    
+
     // Verificar jaque mate o empate
     if (whiteInCheck && isCheckmate(currentBoard, PieceColor.White)) {
       this.endGame(PieceColor.Black);
@@ -456,31 +573,47 @@ export class AppService {
     }
   }
 
+  /**
+   * Obtiene la posición del rey de un color específico en el tablero
+   * @param board - El estado actual del tablero
+   * @param color - El color del rey a buscar
+   * @returns La posición del rey o null si no se encuentra
+   */
   private findKingPosition(board: ChessSquare[][], color: PieceColor): Position | null {
     for (const row of board) for (const sq of row) if (sq.piece && sq.piece.type === PieceType.King && sq.piece.color === color) return sq.position;
     return null;
   }
 
+  /**
+   * Finaliza el juego, actualiza el estado y muestra el modal de victoria
+   * @param winner - color del ganador o null en caso de empate
+   * @returns void
+   */
   private endGame(winner: PieceColor | null): void {
     this.gameOver.set(true);
     this.winnerColor.set(winner);
     try {
-      const score = winner ? this.computeScore(winner) : 50; // Empate = 50 puntos
+      const score = winner ? this.computeScore(winner) : this.DRAW_SCORE; // Empate = 50 puntos
       this.lastGameScore.set(score);
-      const entry: import('../helpers/interfaces').ScoreEntry = {
+      const entry: ScoreEntry = {
         score,
-        winner: winner as import('../helpers/interfaces').WinnerType,
+        winner: winner as WinnerType,
         moves: this.totalMovements(),
-  // dificultad eliminada
+        // dificultad eliminada
         date: new Date().toISOString()
       };
-      this.scoreHistory.update(h => [entry, ...h].slice(0, 50));
+      this.scoreHistory.update(h => [entry, ...h].slice(0, this.MAX_SCORE_HISTORY));
     } catch (e) {
       this.lastGameScore.set(0);
     }
-    setTimeout(() => this.showVictoryModal.set(true), 100);
+    setTimeout(() => this.showVictoryModal.set(true), this.VICTORY_MODAL_DELAY);
   }
 
+  /**
+   * Calcula la puntuación del jugador ganador
+   * @param winner - color del ganador
+   * @returns La puntuación calculada
+   */
   private computeScore(winner: PieceColor): number {
     const base = 100;
     const difficultyMultiplier = 2.5;
@@ -493,5 +626,4 @@ export class AppService {
     return Math.max(0, Math.round(raw));
   }
 
-  // Método de normalización de dificultad eliminado
 }
