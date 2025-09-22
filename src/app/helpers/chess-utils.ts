@@ -3,7 +3,7 @@
  * Este archivo mantiene solo las funciones que no están en los módulos core
  */
 
-import { ChessSquare, ChessPiece, PieceType, Position, SquareColor, PIECE_SYMBOLS } from './interfaces';
+import { ChessSquare, ChessPiece, PieceType, Position, SquareColor, PIECE_SYMBOLS, PIECE_NAMES_ES, PIECE_ICONS_WHITE, PIECE_ICONS_BLACK, PieceColor } from './interfaces';
 import { coordinatesToPosition, getSquareAtPosition } from './chess-basic-validation';
 
 export {
@@ -53,6 +53,25 @@ export function generateMoveNotation(
   const symbol = PIECE_SYMBOLS[piece.type];
   const capture = capturedPiece ? 'x' : '';
   return `${symbol}${sourcePos}${capture}${targetPos}`;
+}
+
+/**
+ * Genera una notación más intuitiva y legible del movimiento
+ */
+export function generateIntuitiveMoveNotation(
+  piece: ChessPiece, 
+  sourcePos: Position, 
+  targetPos: Position, 
+  capturedPiece: ChessPiece | null
+): string {
+  const pieceName = PIECE_NAMES_ES[piece.type];
+  const pieceIcon = piece.color === PieceColor.White ? PIECE_ICONS_WHITE[piece.type] : PIECE_ICONS_BLACK[piece.type];
+  const action = capturedPiece ? 'captura' : 'mueve a';
+  const capturedIcon = capturedPiece ? 
+    (capturedPiece.color === PieceColor.White ? PIECE_ICONS_WHITE[capturedPiece.type] : PIECE_ICONS_BLACK[capturedPiece.type]) : '';
+  const capturedInfo = capturedPiece ? ` (${capturedIcon} ${PIECE_NAMES_ES[capturedPiece.type]})` : '';
+  
+  return `${pieceIcon} ${pieceName} ${sourcePos} ${action} ${targetPos}${capturedInfo}`;
 }
 
 /**

@@ -162,3 +162,39 @@ export const PIECE_SYMBOLS = {
   [PieceType.Knight]: 'N',
   [PieceType.Pawn]: ''
 } as const;
+
+/**
+ * Nombres descriptivos de las piezas en español para notación intuitiva
+ */
+export const PIECE_NAMES_ES = {
+  [PieceType.King]: 'Rey',
+  [PieceType.Queen]: 'Reina',
+  [PieceType.Rook]: 'Torre',
+  [PieceType.Bishop]: 'Alfil',
+  [PieceType.Knight]: 'Caballo',
+  [PieceType.Pawn]: 'Peón'
+} as const;
+
+/**
+ * Iconos Unicode para las piezas de ajedrez (blancas)
+ */
+export const PIECE_ICONS_WHITE = {
+  [PieceType.King]: '♔',
+  [PieceType.Queen]: '♕',
+  [PieceType.Rook]: '♖',
+  [PieceType.Bishop]: '♗',
+  [PieceType.Knight]: '♘',
+  [PieceType.Pawn]: '♙'
+} as const;
+
+/**
+ * Iconos Unicode para las piezas de ajedrez (negras)
+ */
+export const PIECE_ICONS_BLACK = {
+  [PieceType.King]: '♚',
+  [PieceType.Queen]: '♛',
+  [PieceType.Rook]: '♜',
+  [PieceType.Bishop]: '♝',
+  [PieceType.Knight]: '♞',
+  [PieceType.Pawn]: '♟'
+} as const;

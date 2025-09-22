@@ -21,6 +21,7 @@ import {
   getAllPiecesForColor,
   findKings,
   generateMoveNotation,
+  generateIntuitiveMoveNotation,
   hasBoardChanged,
   createEmptyBoard,
   INITIAL_PIECE_ORDER,
@@ -261,7 +262,7 @@ export class AppService {
     const nextTurn = movedPiece.color === PieceColor.White ? PieceColor.Black : PieceColor.White;
     this.currentTurn.set(nextTurn);
     this.totalMovements.update(v => v + 1);
-    const moveNotation = generateMoveNotation(movedPiece, sourcePos, targetPos, capturedPiece);
+    const moveNotation = generateIntuitiveMoveNotation(movedPiece, sourcePos, targetPos, capturedPiece);
     this.moveHistory.update(h => [...h, moveNotation]);
   }
 
