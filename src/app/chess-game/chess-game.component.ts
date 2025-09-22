@@ -71,4 +71,24 @@ export class ChessGameComponent {
     return this.chessService.validateMove(from, to);
   }
 
+  /**
+   * Confirma el movimiento de jaque mate
+   */
+  onConfirmCheckmate(): void {
+    const modal = this.chessService.checkmateConfirmModal();
+    if (modal.onConfirm) {
+      modal.onConfirm();
+    }
+  }
+
+  /**
+   * Cancela el movimiento de jaque mate
+   */
+  onCancelCheckmate(): void {
+    const modal = this.chessService.checkmateConfirmModal();
+    if (modal.onCancel) {
+      modal.onCancel();
+    }
+  }
+
 }

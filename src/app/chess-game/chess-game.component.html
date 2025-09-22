@@ -8,7 +8,7 @@
       [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
       [aiEnabled]="chessService.aiEnabled()" [aiThinking]="chessService.isAiThinking()"
       [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
-      [onReset]="onReset.bind(this)" (toggleAi)="onToggleAi($event)"
+      [checkmateWarning]="chessService.checkmateWarning()" [onReset]="onReset.bind(this)" (toggleAi)="onToggleAi($event)"
       (clearHistory)="chessService.clearScoreHistory()" />
 
 
@@ -32,7 +32,7 @@
           [blackCaptures]="chessService.blackCaptures()" [scoreHistory]="chessService.scoreHistory()"
           [aiEnabled]="chessService.aiEnabled()" [aiThinking]="chessService.isAiThinking()"
           [whiteInCheck]="chessService.whiteInCheck()" [blackInCheck]="chessService.blackInCheck()"
-          [onReset]="onReset.bind(this)" [isVertical]="true" (toggleAi)="onToggleAi($event)"
+          [checkmateWarning]="chessService.checkmateWarning()" [onReset]="onReset.bind(this)" [isVertical]="true" (toggleAi)="onToggleAi($event)"
           (clearHistory)="chessService.clearScoreHistory()" />
       </div>
     </div>
@@ -58,5 +58,51 @@
   @if (chessService.victoryModalData().open) {
   <app-modal-game [modalData]="chessService.victoryModalData()"
     (closeModal)="chessService.showVictoryModal.set(false)" />
+  }
+
+  <!-- Modal de confirmación de jaque mate -->
+  @if (chessService.checkmateConfirmModal().show) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    
+    <!-- Contenido del modal -->
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in-0 zoom-in-95 duration-200">
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-orange-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 16h-1v-4h-1m1-4h.01M21 12c0 4.9706-4.0294 9-9 9s-9-4.0294-9-9 4.0294-9 9-9 9 4.0294 9 9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">⚠️ Movimiento Peligroso</h3>
+          <p class="text-sm text-gray-600">Este movimiento te deja vulnerable</p>
+        </div>
+      </div>
+      
+      <!-- Contenido -->
+      <div class="mb-6">
+        <p class="text-gray-700 leading-relaxed">
+          El movimiento que intentas hacer permitirá que las <strong>negras (IA) puedan hacer jaque mate</strong> en su próximo turno.
+        </p>
+        <p class="text-gray-600 text-sm mt-2">
+          ¿Estás seguro de que quieres hacer este movimiento arriesgado?
+        </p>
+      </div>
+      
+      <!-- Botones -->
+      <div class="flex gap-3">
+        <button (click)="onCancelCheckmate()" 
+                class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-200">
+          No, elegir otro movimiento
+        </button>
+        <button (click)="onConfirmCheckmate()" 
+                class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors duration-200">
+          Sí, asumir el riesgo
+        </button>
+      </div>
+    </div>
+  </div>
   }
 </div>

@@ -90,6 +90,7 @@ export class HeaderGameComponent {
   @Input() scoreHistory: import('../../helpers/interfaces').ScoreEntry[] = [];
   @Input() statsAnimationClass: string = '';
   @Input() isVertical: boolean = false;
+  @Input() checkmateWarning: {show: boolean, message: string} = {show: false, message: ''};
   
   @Output() toggleAi = new EventEmitter<boolean>();
   @Output() clearHistory = new EventEmitter<void>();

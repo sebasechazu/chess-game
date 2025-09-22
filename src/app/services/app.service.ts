@@ -29,7 +29,7 @@ import {
 } from '../helpers/chess-utils';
 
 import { isValidMove } from '../helpers/chess-basic-validation';
-import { isKingInCheck, isCheckmate, isStalemate, isLegalMove } from '../helpers/chess-advanced-rules';
+import { isKingInCheck, isCheckmate, isStalemate, isLegalMove, wouldCauseCheckmate } from '../helpers/chess-advanced-rules';
 
 import { AiService, AiMoveResult } from './ai.service';
 
@@ -58,6 +58,20 @@ export class AppService {
   public lastGameScore = signal<number>(0);
   public scoreHistory = signal<ScoreEntry[]>([]);
   public gameInitialized = signal<boolean>(false);
+  public checkmateWarning = signal<{show: boolean, message: string}>({show: false, message: ''});
+  public checkmateConfirmModal = signal<{
+    show: boolean, 
+    fromPos: string, 
+    toPos: string, 
+    onConfirm: (() => void) | null,
+    onCancel: (() => void) | null
+  }>({
+    show: false, 
+    fromPos: '', 
+    toPos: '', 
+    onConfirm: null,
+    onCancel: null
+  });
 
   // Constantes de configuración
   private readonly INITIAL_ANIMATION_DURATION = 1200;
@@ -192,6 +206,7 @@ export class AppService {
       const pieceName = piece ? `${piece.type} ${piece.color}` : 'pieza';
       return { success: false, error: `El ${pieceName} no puede moverse a esa posición` };
     }
+
     const targetPiece = getPieceAtPosition(board, toPos);
     const moveType = targetPiece ? 'capture' : 'normal';
     if (execute) return this.performMoveWithResult(fromPos, toPos, targetPiece || null);
@@ -210,21 +225,115 @@ export class AppService {
    * @returns un objeto con el resultado del movimiento
    */
   public makeMove(fromPos: Position, toPos: Position): MoveResult {
-    const turnCheck = this.validateTurn(fromPos);
-    if (!turnCheck.valid) {
-      return { success: false, error: turnCheck.error };
-    }
-    const board = this.board();
-    if (!this.isValidMoveComplete(board, fromPos, toPos)) {
-      return { success: false, error: 'Movimiento inválido' };
-    }
-    const targetPiece = getPieceAtPosition(board, toPos);
-    const result = this.performMoveWithResult(fromPos, toPos, targetPiece || null);
-    if (!result.success) {
-      return result;
+    const piece = getPieceAtPosition(this.board(), fromPos);
+    console.log('Making move:', fromPos, 'to', toPos, 'piece:', piece);
+    
+    // Solo verificar movimientos peligrosos para las blancas (jugador)
+    if (piece && piece.color === PieceColor.White) {
+      console.log('Checking white piece move for danger...');
+      // Simular el movimiento de las blancas
+      const simulatedBoard = this.simulatePlayerMove(fromPos, toPos);
+      if (!simulatedBoard) {
+        return { success: false, error: 'Movimiento inválido' };
+      }
+      
+      // Verificar si después de este movimiento, las negras pueden hacer jaque mate
+      const canCheckmate = this.canBlackMakeCheckmate(simulatedBoard);
+      console.log('Can black make checkmate after this move?', canCheckmate);
+      
+      if (canCheckmate) {
+        console.log('DANGEROUS MOVE DETECTED! Showing confirmation modal...');
+        // Mostrar modal de confirmación para advertir al jugador
+        this.checkmateConfirmModal.set({
+          show: true,
+          fromPos,
+          toPos,
+          onConfirm: () => {
+            this.checkmateConfirmModal.set({show: false, fromPos: '', toPos: '', onConfirm: null, onCancel: null});
+            // Ejecutar el movimiento después de la confirmación
+            this.executeMove(fromPos, toPos);
+          },
+          onCancel: () => {
+            this.checkmateConfirmModal.set({show: false, fromPos: '', toPos: '', onConfirm: null, onCancel: null});
+            // No hacer nada, el movimiento no se ejecuta
+          }
+        });
+        
+        return { success: false, error: 'Esperando confirmación - movimiento peligroso' };
+      }
     }
 
-    return result;
+    // Para las negras (IA) o si no hay problemas, ejecutar el movimiento normalmente
+    return this.executeMove(fromPos, toPos);
+  }
+
+  /**
+   * Método específico para movimientos de la IA - sin verificaciones de confirmación
+   * @param fromPos - posición origen
+   * @param toPos - posición destino
+   * @returns resultado del movimiento
+   */
+  public executeAiMove(fromPos: Position, toPos: Position): MoveResult {
+    return this.executeMove(fromPos, toPos);
+  }
+
+  /**
+   * Simula un movimiento del jugador y devuelve el tablero resultante
+   */
+  private simulatePlayerMove(fromPos: Position, toPos: Position): ChessSquare[][] | null {
+    const validation = this.validateMoveInternal(fromPos, toPos, false);
+    if (!validation.success) {
+      return null;
+    }
+
+    const board = deepCloneBoard(this.board());
+    const fromCoords = positionToCoordinates(fromPos);
+    const toCoords = positionToCoordinates(toPos);
+    const piece = board[fromCoords.row][fromCoords.col].piece;
+    
+    if (!piece) return null;
+
+    // Realizar el movimiento en el tablero simulado
+    board[toCoords.row][toCoords.col].piece = piece;
+    board[fromCoords.row][fromCoords.col].piece = null;
+    
+    return board;
+  }
+
+  /**
+   * Verifica si las negras pueden hacer jaque mate en el tablero dado
+   */
+  private canBlackMakeCheckmate(board: ChessSquare[][]): boolean {
+    // Buscar todas las piezas negras
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const piece = board[row][col].piece;
+        if (piece && piece.color === PieceColor.Black) {
+          // Para cada pieza negra, verificar todos sus movimientos posibles
+          for (let targetRow = 0; targetRow < 8; targetRow++) {
+            for (let targetCol = 0; targetCol < 8; targetCol++) {
+              if (isValidMove(board, piece, [row, col], [targetRow, targetCol])) {
+                // Verificar si este movimiento causa jaque mate
+                if (wouldCauseCheckmate(board, piece, [row, col], [targetRow, targetCol])) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Ejecuta un movimiento sin verificaciones adicionales
+   * @param fromPos - posición origen
+   * @param toPos - posición destino
+   * @returns resultado del movimiento
+   */
+  private executeMove(fromPos: Position, toPos: Position): MoveResult {
+    return this.validateMoveInternal(fromPos, toPos, true);
   }
 
   /**
@@ -501,7 +610,7 @@ export class AppService {
     try {
       const aiResult: AiMoveResult = await this.aiService.findBestMove(board);
       if (aiResult.move) {
-        const result = this.makeMove(aiResult.move.from, aiResult.move.to);
+        const result = this.executeAiMove(aiResult.move.from, aiResult.move.to);
       } else {
         console.warn('No hay movimientos disponibles para la IA');
       }

@@ -78,6 +78,30 @@ export function isCheckmate(board: ChessSquare[][], kingColor: PieceColor): bool
 }
 
 /**
+ * Verifica si un movimiento específico resultaría en jaque mate para el oponente
+ */
+export function wouldCauseCheckmate(
+  board: ChessSquare[][], 
+  piece: ChessPiece, 
+  from: [number, number], 
+  to: [number, number]
+): boolean {
+  // Simular el movimiento
+  const newBoard = deepCloneBoard(board);
+  const [fromRow, fromCol] = from;
+  const [toRow, toCol] = to;
+  
+  newBoard[toRow][toCol].piece = piece;
+  newBoard[fromRow][fromCol].piece = null;
+  
+  // Determinar el color del oponente
+  const opponentColor = piece.color === PieceColor.White ? PieceColor.Black : PieceColor.White;
+  
+  // Verificar si esto resulta en jaque mate para el oponente
+  return isCheckmate(newBoard, opponentColor);
+}
+
+/**
  * Verifica si es empate por ahogado (stalemate)
  */
 export function isStalemate(board: ChessSquare[][], playerColor: PieceColor): boolean {
