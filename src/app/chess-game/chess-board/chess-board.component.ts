@@ -1,9 +1,8 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { ChessSquare, SquareColor, PieceColor, MoveResult } from '../../helpers/interfaces';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NgClass } from '@angular/common';
 import { ChessPieceComponent } from "../chess-piece/chess-piece.component";
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 /**
  * Componente de presentación del tablero de ajedrez
@@ -12,21 +11,10 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
 @Component({
   selector: 'app-chess-board',
   templateUrl: './chess-board.component.html',
+  styleUrl: './chess-board.component.css',
+  standalone: true,
   imports: [ChessPieceComponent, DragDropModule, NgClass],
-  animations: [
-    trigger('boardAppear', [
-      transition(':enter', [
-        query('.chess-square-container', [
-          style({ opacity: 0, transform: 'translateY(30px) scale(0.8)' }),
-          stagger(20, [
-            animate('400ms cubic-bezier(0.34, 1.56, 0.64, 1)', 
-              style({ opacity: 1, transform: 'translateY(0) scale(1)' })
-            )
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ]
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChessBoardComponent {
 
@@ -34,98 +22,84 @@ export class ChessBoardComponent {
   readonly rows = [8, 7, 6, 5, 4, 3, 2, 1];
   readonly SquareColor = SquareColor; 
   
-  board = input<ChessSquare[][]>([]);
-  currentTurn = input<PieceColor>(PieceColor.White); 
+  board = input.required<ChessSquare[][]>();
+  currentTurn = input.required<PieceColor>(); 
   gameOver = input<boolean>(false);
+  animate = input<boolean>(true);
   validateMove = input<(from: string, to: string) => MoveResult>();
   
   moveAttempt = output<{ from: string; to: string }>();
 
-  public hoveredSquare: string | null = null;
-  public dragging: string | null = null;
-  public lastMoveValid: boolean | null = null;
+  public hoveredSquare = signal<string | null>(null);
+  public dragging = signal<string | null>(null);
+
+  /**
+   * Valida si el movimiento actual (mientras se arrastra) es legal.
+   * Se recalcula automáticamente cuando cambia la pieza arrastrada o la casilla de hover.
+   */
+  public lastMoveValid = computed(() => {
+    const from = this.dragging();
+    const to = this.hoveredSquare();
+    const validateFn = this.validateMove();
+
+    if (from && to && validateFn) {
+      return validateFn(from, to).success;
+    }
+    return null;
+  });
 
   /**
    * Maneja el evento drop de una pieza en el tablero
-   * @param event - Evento de drag and drop del CDK
    */
   onPieceDrop(event: CdkDragDrop<ChessSquare>) {
-    this.dragging = null;
-    this.hoveredSquare = null;
-    
     const sourceSquare = event.previousContainer.data;
     const targetSquare = event.container.data;
     
-    if (!sourceSquare || !targetSquare) {
-      this.lastMoveValid = null;
-      return;
-    }
+    this.dragging.set(null);
+    this.hoveredSquare.set(null);
+    
+    if (!sourceSquare || !targetSquare) return;
     
     const sourcePosition = sourceSquare.position;
     const targetPosition = targetSquare.position;
     const movingPiece = sourceSquare.piece;
     
-    if (!movingPiece || sourcePosition === targetPosition) {
-      this.lastMoveValid = null;
-      return;
-    }
+    if (!movingPiece || sourcePosition === targetPosition) return;
 
     this.moveAttempt.emit({ from: sourcePosition, to: targetPosition });
-    this.lastMoveValid = true;
-    
-    setTimeout(() => {
-      this.lastMoveValid = null;
-    }, 1000);
   }
 
   /**
    * Inicia el arrastre de una pieza
-   * @param square - Casilla que contiene la pieza a arrastrar
    */
   onDragStarted(square: ChessSquare) {
-    this.dragging = square.position;
-    this.lastMoveValid = null;
-    this.hoveredSquare = null;
+    this.dragging.set(square.position);
+    this.hoveredSquare.set(null);
   }
 
   /**
    * Finaliza el arrastre de una pieza
    */
   onDragEnded() {
-    if (this.lastMoveValid === null) {
-      this.dragging = null;
-      this.hoveredSquare = null;
-    }
+    this.dragging.set(null);
+    this.hoveredSquare.set(null);
   }
 
   /**
    * Maneja cuando una pieza entra en hover sobre una casilla
-   * @param square - Casilla sobre la que se está haciendo hover
    */
   onSquareDragEnter(square: ChessSquare) {
-    if (!this.dragging) return;
-    
-    this.hoveredSquare = square.position;
-    
-    // Validar si el movimiento es válido usando la función pasada desde el padre
-    const validateMoveFn = this.validateMove();
-    if (validateMoveFn) {
-      const moveResult = validateMoveFn(this.dragging, square.position);
-      this.lastMoveValid = moveResult.success;
-    } else {
-      // Fallback: asumir válido si no hay función de validación
-      this.lastMoveValid = true;
+    if (this.dragging()) {
+      this.hoveredSquare.set(square.position);
     }
   }
 
   /**
    * Maneja cuando una pieza sale del hover de una casilla
-   * @param square - Casilla de la que se sale el hover
    */
   onSquareDragLeave(square: ChessSquare) {
-    if (this.hoveredSquare === square.position) {
-      this.hoveredSquare = null;
-      this.lastMoveValid = null;
+    if (this.hoveredSquare() === square.position) {
+      this.hoveredSquare.set(null);
     }
   }
 }

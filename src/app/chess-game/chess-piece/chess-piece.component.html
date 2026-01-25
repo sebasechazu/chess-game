@@ -1,10 +1,11 @@
-<div class="w-full h-full flex items-center justify-center relative p-1"
-     [class.opacity-0]="!piece"
+<div class="piece-container"
+     [class.moving]="isMoving()"
+     [class.idle]="!isMoving()"
+     [class.opacity-0]="!piece()"
      role="img" 
-     [attr.aria-label]="altText()"
-     [@pieceMove]="getMoveState()">
+     [attr.aria-label]="altText()">
   
-  @if (piece && imageSrc(); as src) {
+  @if (piece() && imageSrc(); as src) {
     <img [src]="src"
          [alt]="altText()"
          class="w-full h-full object-contain select-none"

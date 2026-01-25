@@ -58,6 +58,7 @@ export class AppService {
   public lastGameScore = signal<number>(0);
   public scoreHistory = signal<ScoreEntry[]>([]);
   public gameInitialized = signal<boolean>(false);
+  public isDarkMode = signal<boolean>(false);
   public checkmateWarning = signal<{show: boolean, message: string}>({show: false, message: ''});
   public checkmateConfirmModal = signal<{
     show: boolean, 
@@ -81,14 +82,32 @@ export class AppService {
   private readonly VICTORY_MODAL_DELAY = 100;
   private readonly DRAW_SCORE = 50;
   private readonly SCORE_HISTORY_KEY = 'chess.scoreHistory.v1';
+  private readonly THEME_KEY = 'chess.theme.v1';
   private readonly BOARD_SIZE = 8;
   private readonly ASCII_LOWERCASE_A = 97;
 
   constructor(private aiService: AiService) {
     setTimeout(() => this.showInitialAnimations.set(false), this.INITIAL_ANIMATION_DURATION);
+    
+    // Inicializar tema desde localStorage
+    const savedTheme = localStorage.getItem(this.THEME_KEY);
+    if (savedTheme === 'dark') {
+      this.isDarkMode.set(true);
+    }
+
     effect(() => {
       const _ = this.board();
       this.checkGameStatus();
+    });
+
+    effect(() => {
+      const dark = this.isDarkMode();
+      localStorage.setItem(this.THEME_KEY, dark ? 'dark' : 'light');
+      if (dark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     });
 
     try {

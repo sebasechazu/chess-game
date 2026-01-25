@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-history-game',
-  templateUrl: './history-game.component.html'
+  templateUrl: './history-game.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HistoryGameComponent {
-  @Input() moveHistory: string[] = [];
-  @Input() isVertical: boolean = false;
+  moveHistory = input<string[]>([]);
+  isVertical = input<boolean>(false);
 }

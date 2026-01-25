@@ -1,0 +1,77 @@
+/* Banner Anim */
+@keyframes bannerAppearVisible {
+  0% { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  70% { opacity: 1; transform: translateY(4px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bannerAppearProminent {
+  0% { opacity: 0; transform: translateY(-16px) scale(0.96); }
+  80% { opacity: 1; transform: translateY(6px) scale(1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1.02); }
+}
+
+@keyframes bannerHide {
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+.banner {
+  transition: all 220ms ease-out;
+}
+
+.banner.hidden {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.banner.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: bannerAppearVisible 220ms ease-out forwards;
+}
+
+.banner.prominent {
+  opacity: 1;
+  transform: translateY(0) scale(1.02);
+  animation: bannerAppearProminent 260ms cubic-bezier(.2,.9,.2,1) forwards;
+}
+
+/* Stats List Stagger */
+@keyframes statCardAppear {
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.stat-card {
+  opacity: 0;
+  animation: statCardAppear 240ms cubic-bezier(.2,.8,.2,1) forwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+/* Pop Animation */
+@keyframes popAnim {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  75% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+.pop-effect {
+  animation: popAnim 260ms ease;
+}
+
+/* Toggle Rotate */
+@keyframes toggleRotateAnim {
+  0% { transform: rotate(0deg); }
+  30% { transform: rotate(12deg); }
+  60% { transform: rotate(-8deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.rotate-effect {
+  animation: toggleRotateAnim 360ms cubic-bezier(.2,.8,.2,1) forwards;
+}

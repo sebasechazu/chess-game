@@ -1,53 +1,19 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, state, style, transition, animate } from '@angular/animations';
+import { ModalData } from '../../helpers/interfaces';
 
 @Component({
   selector: 'app-modal-game',
   templateUrl: './modal-game.component.html',
+  styleUrl: './modal-game.component.css',
   standalone: true,
   imports: [CommonModule],
-  animations: [
-    trigger('modalBackdrop', [
-      state('open', style({
-        opacity: 1,
-        visibility: 'visible'
-      })),
-      state('closed', style({
-        opacity: 0,
-        visibility: 'hidden'
-      })),
-      transition('closed => open', [
-        animate('200ms ease-out')
-      ]),
-      transition('open => closed', [
-        animate('150ms ease-in')
-      ])
-    ]),
-    trigger('modalContent', [
-      state('open', style({
-        opacity: 1,
-        transform: 'scale(1) translateY(0)',
-        visibility: 'visible'
-      })),
-      state('closed', style({
-        opacity: 0,
-        transform: 'scale(0.95) translateY(-20px)',
-        visibility: 'hidden'
-      })),
-      transition('closed => open', [
-        animate('250ms ease-out')
-      ]),
-      transition('open => closed', [
-        animate('200ms ease-in')
-      ])
-    ])
-  ]
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ModalGameComponent {
-  @Input() modalData: import('../../helpers/interfaces').ModalData = { open: false, title: '', content: '' };
-  @Input() showCloseButton: boolean = true;
-  @Output() closeModal = new EventEmitter<void>();
+  modalData = input<ModalData>({ open: false, title: '', content: '' });
+  showCloseButton = input<boolean>(true);
+  closeModal = output<void>();
 
   onBackdropClick(event: Event) {
     if (event.target === event.currentTarget) {

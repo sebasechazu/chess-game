@@ -1,28 +1,27 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4"
-  [@modalBackdrop]="modalData.open ? 'open' : 'closed'"
+<div class="modal-wrapper"
+  [class.pointer-events-none]="!modalData().open"
   (click)="onBackdropClick($event)"
   (keydown)="onKeyDown($event)"
   tabindex="-1"
   role="dialog"
   aria-modal="true"
-  [attr.aria-label]="modalData.title || 'Modal de juego'">
+  [attr.aria-label]="modalData().title || 'Modal de juego'">
   
   <!-- Backdrop con blur -->
-  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+  <div class="modal-backdrop" [class.open]="modalData().open" [class.closed]="!modalData().open"></div>
   
   <!-- Contenido del modal -->
-  <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-       [@modalContent]="modalData.open ? 'open' : 'closed'">
+  <div class="modal-content-container" [class.open]="modalData().open" [class.closed]="!modalData().open">
     
     <!-- Header opcional -->
-    @if (modalData.title || showCloseButton) {
-    <div class="flex items-center justify-between p-6 border-b border-gray-200">
-      @if (modalData.title) {
-      <h2 class="text-xl font-bold text-gray-900">{{ modalData.title }}</h2>
+    @if (modalData().title || showCloseButton()) {
+    <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+      @if (modalData().title) {
+      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ modalData().title }}</h2>
       }
-      @if (showCloseButton) {
+      @if (showCloseButton()) {
       <button (click)="close()"
-              class="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
+              class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -33,16 +32,16 @@
     
     <!-- Contenido del modal -->
     <div class="p-6">
-      @if (modalData.content) {
-        <p class="text-center text-lg font-medium mb-4">{{ modalData.content }}</p>
+      @if (modalData().content) {
+        <p class="text-center text-lg font-medium mb-4 dark:text-gray-200">{{ modalData().content }}</p>
       }
       <ng-content></ng-content>
 
       <!-- Mostrar puntaje si está disponible -->
-      @if (modalData.score !== undefined) {
-      <div class="mt-4 bg-gray-50 p-3 rounded-lg text-center border">
-        <div class="text-xs text-gray-500 uppercase">Puntaje final</div>
-        <div class="text-2xl font-extrabold text-blue-600">{{ modalData.score }}</div>
+      @if (modalData().score !== undefined) {
+      <div class="mt-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg text-center border dark:border-gray-600">
+        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Puntaje final</div>
+        <div class="text-2xl font-extrabold text-blue-600 dark:text-blue-400">{{ modalData().score }}</div>
       </div>
       }
     </div>

@@ -6,13 +6,10 @@ import { ModalGameComponent } from '../shared/modal-game/modal-game.component';
 import { HistoryGameComponent } from '../shared/history-game/history-game.component';
 import { HeaderGameComponent } from '../shared/header-game/header-game.component';
 
-/**
- * Componente principal del juego de ajedrez
- * Coordina la interacción entre el servicio de lógica y los componentes de UI
- */
 @Component({
   selector: 'app-chess-game',
   templateUrl: './chess-game.component.html',
+  standalone: true,
   imports: [
     CommonModule,
     ChessBoardComponent,
@@ -23,57 +20,27 @@ import { HeaderGameComponent } from '../shared/header-game/header-game.component
 })
 export class ChessGameComponent {
 
-  // migración gradual: usar AppService en lugar de ChessService
-  // usar AppService directamente
   readonly chessService = inject(AppService);
-  
-  /** Tablero de ajedrez reactivo */
   board = this.chessService.board;
-  /** Turno actual del juego */
   currentTurn = this.chessService.currentTurn;
-  /** Estado de finalización del juego */
   gameOver = this.chessService.gameOver;
 
   constructor() {
     this.chessService.initializeGame();
   }
 
-  /**
-   * Reinicia el juego a su estado inicial
-   */
   onReset(): void {
     this.chessService.resetGame();
   }
 
-  /**
-   * Activa o desactiva la inteligencia artificial
-   * @param enabled - true para activar IA, false para desactivar
-   */
-  onToggleAi(enabled: boolean): void {
-    this.chessService.aiEnabled.set(enabled);
-  }
-
-  /**
-   * Procesa un intento de movimiento desde el tablero
-   * @param moveData - Datos del movimiento con posiciones origen y destino
-   */
   onMoveAttempt(moveData: { from: string; to: string }): void {
     this.chessService.makeMove(moveData.from, moveData.to);
   }
 
-  /**
-   * Valida un movimiento sin ejecutarlo (para feedback visual)
-   * @param from - Posición origen
-   * @param to - Posición destino
-   * @returns Resultado de la validación
-   */
   validateMove(from: string, to: string) {
     return this.chessService.validateMove(from, to);
   }
 
-  /**
-   * Confirma el movimiento de jaque mate
-   */
   onConfirmCheckmate(): void {
     const modal = this.chessService.checkmateConfirmModal();
     if (modal.onConfirm) {
@@ -81,9 +48,6 @@ export class ChessGameComponent {
     }
   }
 
-  /**
-   * Cancela el movimiento de jaque mate
-   */
   onCancelCheckmate(): void {
     const modal = this.chessService.checkmateConfirmModal();
     if (modal.onCancel) {

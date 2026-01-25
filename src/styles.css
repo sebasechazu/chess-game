@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+
+    /* Paleta base exacta */
+    --color-gunmetal: #454545ff;
+    --color-taupe-grey: #6d5959ff;
+    --color-muted-teal: #9dcbbaff;
+    --color-celadon: #abebd2ff;
+    --color-spring-green: #04f06aff;
+
+    /* Tema Claro - Usando la paleta exacta */
+    --color-app-background: var(--color-celadon);
+    --color-app-accent: var(--color-spring-green);
+    --color-app-muted: var(--color-muted-teal);
+    --color-text-primary: var(--color-gunmetal);
+    --color-text-secondary: var(--color-taupe-grey);
+    --color-text-muted: var(--color-gunmetal);
+}
+
+/* Tema Oscuro - Sobrescribir variables cuando .dark está presente */
+@layer theme {
+    .dark {
+        --color-app-background: var(--color-gunmetal);
+        --color-app-accent: var(--color-spring-green);
+        --color-app-muted: var(--color-taupe-grey);
+        --color-text-primary: var(--color-celadon);
+        --color-text-secondary: var(--color-muted-teal);
+        --color-text-muted: var(--color-celadon);
+    }
+}
+
+:root {
+    color-scheme: light dark;
+}
