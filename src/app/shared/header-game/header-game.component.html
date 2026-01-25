@@ -7,7 +7,7 @@
     
 
     <!-- Información del turno: siempre en fila y centrado en su contenedor -->
-    <div class="flex items-center gap-3 text-center flex-shrink-0 justify-center w-full sm:w-auto mx-auto">
+    <div class="flex items-center gap-3 text-center shrink-0 justify-center w-full sm:w-auto mx-auto">
       <div class="text-sm font-bold">
         Turno Actual
       </div>
@@ -224,7 +224,7 @@
     }
 
     <!-- Botones -->
-    <div class="flex-shrink-0" [class.w-full]="isVertical()" [class.mt-auto]="isVertical()">
+    <div class="shrink-0" [class.w-full]="isVertical()" [class.mt-auto]="isVertical()">
   <div class="grid gap-2" [class.grid-cols-2]="!isVertical()" [class.grid-cols-1]="isVertical()">
         <!-- Toggle IA -->
         <button (click)="onToggleAi()" [class.bg-green-500]="aiEnabled()" [class.hover:bg-green-600]="aiEnabled()"
