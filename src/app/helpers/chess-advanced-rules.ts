@@ -10,9 +10,9 @@ import { deepCloneBoard, simulateMove } from './chess-core-utils';
 
 /**
  * Verifica si el rey está en jaque
+ * Devuelve verdadero o falso
  */
 export function isKingInCheck(board: ChessSquare[][], kingColor: PieceColor): boolean {
-  // Encontrar el rey
   let kingPosition: [number, number] | null = null;
   
   for (let row = 0; row < 8; row++) {
@@ -28,7 +28,6 @@ export function isKingInCheck(board: ChessSquare[][], kingColor: PieceColor): bo
   
   if (!kingPosition) return false;
   
-  // Verificar si alguna pieza enemiga puede atacar al rey
   const enemyColor = kingColor === PieceColor.White ? PieceColor.Black : PieceColor.White;
   
   for (let row = 0; row < 8; row++) {
@@ -47,11 +46,11 @@ export function isKingInCheck(board: ChessSquare[][], kingColor: PieceColor): bo
 
 /**
  * Verifica si es jaque mate
+ * Devuelve verdadero o falso
  */
 export function isCheckmate(board: ChessSquare[][], kingColor: PieceColor): boolean {
   if (!isKingInCheck(board, kingColor)) return false;
   
-  // Verificar si hay algún movimiento legal que saque al rey del jaque
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const piece = board[row][col].piece;
@@ -59,13 +58,13 @@ export function isCheckmate(board: ChessSquare[][], kingColor: PieceColor): bool
         for (let targetRow = 0; targetRow < 8; targetRow++) {
           for (let targetCol = 0; targetCol < 8; targetCol++) {
             if (isValidMove(board, piece, [row, col], [targetRow, targetCol])) {
-              // Simular el movimiento
+
               const newBoard = deepCloneBoard(board);
               newBoard[targetRow][targetCol].piece = piece;
               newBoard[row][col].piece = null;
               
               if (!isKingInCheck(newBoard, kingColor)) {
-                return false; // Hay un movimiento legal
+                return false; 
               }
             }
           }
@@ -74,11 +73,12 @@ export function isCheckmate(board: ChessSquare[][], kingColor: PieceColor): bool
     }
   }
   
-  return true; // No hay movimientos legales
+  return true;
 }
 
 /**
  * Verifica si un movimiento específico resultaría en jaque mate para el oponente
+ * Devuelve verdadero o falso
  */
 export function wouldCauseCheckmate(
   board: ChessSquare[][], 
@@ -86,7 +86,6 @@ export function wouldCauseCheckmate(
   from: [number, number], 
   to: [number, number]
 ): boolean {
-  // Simular el movimiento
   const newBoard = deepCloneBoard(board);
   const [fromRow, fromCol] = from;
   const [toRow, toCol] = to;
@@ -94,20 +93,18 @@ export function wouldCauseCheckmate(
   newBoard[toRow][toCol].piece = piece;
   newBoard[fromRow][fromCol].piece = null;
   
-  // Determinar el color del oponente
   const opponentColor = piece.color === PieceColor.White ? PieceColor.Black : PieceColor.White;
   
-  // Verificar si esto resulta en jaque mate para el oponente
   return isCheckmate(newBoard, opponentColor);
 }
 
 /**
  * Verifica si es empate por ahogado (stalemate)
+ * Devuelve verdadero o falso
  */
 export function isStalemate(board: ChessSquare[][], playerColor: PieceColor): boolean {
   if (isKingInCheck(board, playerColor)) return false;
   
-  // Verificar si hay algún movimiento legal
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const piece = board[row][col].piece;
@@ -115,13 +112,12 @@ export function isStalemate(board: ChessSquare[][], playerColor: PieceColor): bo
         for (let targetRow = 0; targetRow < 8; targetRow++) {
           for (let targetCol = 0; targetCol < 8; targetCol++) {
             if (isValidMove(board, piece, [row, col], [targetRow, targetCol])) {
-              // Simular el movimiento para asegurar que no deja al rey en jaque
               const newBoard = deepCloneBoard(board);
               newBoard[targetRow][targetCol].piece = piece;
               newBoard[row][col].piece = null;
               
               if (!isKingInCheck(newBoard, playerColor)) {
-                return false; // Hay al menos un movimiento legal
+                return false; 
               }
             }
           }
@@ -130,11 +126,12 @@ export function isStalemate(board: ChessSquare[][], playerColor: PieceColor): bo
     }
   }
   
-  return true; // No hay movimientos legales disponibles
+  return true;
 }
 
 /**
  * Verifica si un movimiento es legal (no deja al propio rey en jaque)
+ * Devuelve verdadero o falso
  */
 export function isLegalMove(
   board: ChessSquare[][],
@@ -142,20 +139,18 @@ export function isLegalMove(
   from: [number, number],
   to: [number, number]
 ): boolean {
-  // Primero verificar si es un movimiento básicamente válido
   if (!isValidMove(board, piece, from, to)) return false;
   
-  // Simular el movimiento
   const newBoard = deepCloneBoard(board);
   newBoard[to[0]][to[1]].piece = piece;
   newBoard[from[0]][from[1]].piece = null;
   
-  // Verificar que no deje al propio rey en jaque
   return !isKingInCheck(newBoard, piece.color);
 }
 
 /**
  * Obtiene todos los movimientos legales para una pieza
+ * Devuelve una lista de posiciones legales
  */
 export function getLegalMoves(
   board: ChessSquare[][],
@@ -164,7 +159,6 @@ export function getLegalMoves(
 ): Position[] {
   const legalMoves: Position[] = [];
   
-  // Probar todos los movimientos posibles
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       if (isLegalMove(board, piece, from, [row, col])) {
@@ -178,6 +172,7 @@ export function getLegalMoves(
 
 /**
  * Verifica si el juego ha terminado
+ * Devuelve el ganador y la razón si es aplicable
  */
 export function isGameOver(board: ChessSquare[][], currentPlayer: PieceColor): {
   isOver: boolean;

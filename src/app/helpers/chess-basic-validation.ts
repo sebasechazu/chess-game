@@ -4,21 +4,42 @@
  */
 import { ChessPiece, ChessSquare, PieceType, PieceColor, Position } from './interfaces';
 
-const BOARD_SIZE = 8;
-const FILE_A_CODE = 97;
+/**
+ * Constantes para el tamaño del tablero y códigos ASCII
+ */
+export const BOARD_SIZE = 8;
+export const FILE_A_CODE = 97;
 
+
+/**
+ * Convierte una posición en notación algebraica a coordenadas de matriz
+ * @param position Posición en notación algebraica (e.g., 'e4')
+ * @returns Objeto con fila y columna
+ */
 export function positionToCoordinates(position: Position): { row: number; col: number } {
     const file = position.charCodeAt(0) - FILE_A_CODE;
     const rank = Number(position.charAt(1)) - 1;
     return { row: BOARD_SIZE - 1 - rank, col: file };
 }
 
+/**
+ * Convierte coordenadas de matriz a posición en notación algebraica
+ * @param row Fila en la matriz
+ * @param col Columna en la matriz
+ * @returns Posición en notación algebraica (e.g., 'e4')
+ */
 export function coordinatesToPosition(row: number, col: number): Position {
     const file = String.fromCharCode(FILE_A_CODE + col);
     const rank = BOARD_SIZE - row;
     return `${file}${rank}`;
 }
 
+/**
+ * Verifica si las coordenadas están dentro de los límites del tablero
+ * @param row Fila en la matriz
+ * @param col Columna en la matriz
+ * @returns Verdadero si las coordenadas son válidas
+ */
 export function isValidCoordinates(row: number, col: number): boolean {
     return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
 }
@@ -47,6 +68,11 @@ export function getSquareAtPosition(board: ChessSquare[][], position: Position):
     return board[coords.row][coords.col];
 }
 
+/**
+ * Verifica si una posición en notación algebraica es válida dentro del tablero
+ * @param position Posición en notación algebraica (e.g., 'e4')
+ * @returns Verdadero si la posición es válida
+ */
 export function isValidPosition(position: Position): boolean {
     if (position.length !== 2) return false;
     const file = position.charCodeAt(0);
@@ -110,8 +136,6 @@ export function isValidMove(board: ChessSquare[][], piece: ChessPiece, from: [nu
 function isValidMoveByRules(board: ChessSquare[][], piece: ChessPiece, from: [number, number], to: [number, number]): boolean {
     const [fromRow, fromCol] = from;
     const [toRow, toCol] = to;
-    const rowDiff = Math.abs(toRow - fromRow);
-    const colDiff = Math.abs(toCol - fromCol);
 
     switch (piece.type) {
         case PieceType.Pawn:
@@ -161,12 +185,12 @@ function isValidPawnMoveInternal(board: ChessSquare[][], piece: ChessPiece, from
 }
 
 /**
- * Verifica si un movimiento de alfil es válido
+ * Verifica si un movimiento de torre es válido (movimientos ortogonales)
  * @param board  - El estado actual del tablero
  * @param fromRow  - Fila de origen
  * @param fromCol  - Columna de origen
- * @param toRow  - 
- * @param toCol  - 
+ * @param toRow  - Fila de destino
+ * @param toCol  - Columna de destino
  * @returns  Verdadero si el movimiento es válido
  */
 function isValidRookMoveInternal(board: ChessSquare[][], fromRow: number, fromCol: number, toRow: number, toCol: number): boolean {
@@ -177,8 +201,7 @@ function isValidRookMoveInternal(board: ChessSquare[][], fromRow: number, fromCo
 }
 
 /**
- * Verifica si un movimiento de torre es válido
- * @param board - El estado actual del tablero
+ * Verifica si un movimiento de caballo es válido (movimientos en L)
  * @param fromRow - Fila de origen
  * @param fromCol - Columna de origen
  * @param toRow - Fila de destino
@@ -192,7 +215,7 @@ function isValidKnightMoveInternal(fromRow: number, fromCol: number, toRow: numb
 }
 
 /**
- * Verifica si un movimiento de caballo es válido
+ * Verifica si un movimiento de alfil es válido (movimientos diagonales)
  * @param board - El estado actual del tablero
  * @param fromRow  - Fila de origen
  * @param fromCol  - Columna de origen
@@ -232,7 +255,6 @@ function isValidQueenMoveInternal(board: ChessSquare[][], fromRow: number, fromC
  * @param toCol - Columna de destino
  * @returns Verdadero si el movimiento es válido
  */
-
 function isValidKingMoveInternal(fromRow: number, fromCol: number, toRow: number, toCol: number): boolean {
     const rowDiff = Math.abs(toRow - fromRow);
     const colDiff = Math.abs(toCol - fromCol);
