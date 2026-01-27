@@ -1,0 +1,44 @@
+<div class="auth-page p-4">
+    <div class="w-full max-w-md bg-app-background p-8 rounded-2xl shadow-2xl border border-app-accent/20">
+        <div class="text-center mb-10 text-text-primary">
+            <h1 class="text-3xl font-bold tracking-tight mb-2">Recuperar cuenta</h1>
+            <p class="text-text-secondary">Te enviaremos un enlace para restablecer tu contraseña</p>
+        </div>
+
+        @if (!isSent()) {
+        <form [formGroup]="recoveryForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div class="space-y-2">
+                <label for="email" class="block text-sm font-medium text-text-primary">Correo Electrónico</label>
+                <input id="email" type="email" formControlName="email"
+                    class="w-full px-4 py-3 rounded-xl border border-app-muted bg-transparent text-text-primary focus:ring-2 focus:ring-app-accent focus:border-transparent transition-all outline-none"
+                    placeholder="tu@email.com" />
+            </div>
+
+            <button type="submit" [disabled]="recoveryForm.invalid || isLoading()"
+                class="w-full py-4 bg-app-accent text-gunmetal font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98]">
+                @if (isLoading()) {
+                <span>Enviando...</span>
+                } @else {
+                <span>Enviar Enlace</span>
+                }
+            </button>
+        </form>
+        } @else {
+        <div class="text-center py-8">
+            <div class="w-20 h-20 bg-app-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="text-3xl">📧</span>
+            </div>
+            <h2 class="text-xl font-bold text-text-primary mb-2">¡Correo enviado!</h2>
+            <p class="text-text-secondary mb-8">Revisa tu bandeja de entrada para continuar con el proceso.</p>
+            <button (click)="isSent.set(false)" class="text-app-accent font-semibold hover:underline">
+                Volver a intentar
+            </button>
+        </div>
+        }
+
+        <div class="mt-8 text-center text-sm text-text-secondary">
+            ¿Recordaste tu contraseña?
+            <a routerLink="/auth/login" class="text-app-accent font-semibold hover:underline ml-1">Volver al inicio</a>
+        </div>
+    </div>
+</div>

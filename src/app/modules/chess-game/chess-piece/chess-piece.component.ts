@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChessPiece } from '../../helpers/interfaces';
+import { ChessPiece } from '../../../core/helpers/interfaces';
 
 /**
  * Componente de presentación para una pieza de ajedrez individual
@@ -21,9 +21,9 @@ export class ChessPieceComponent {
 
   /** Indica si la pieza está en movimiento para activar la animación */
   isMoving = input<boolean>(false);
-  
-  private readonly basePath = 'assets/img/chess/';
-  private readonly fallbackImage = 'assets/img/chess/fallback-piece.svg';
+
+  private readonly basePath = '/assets/img/chess/';
+  private readonly fallbackImage = '/assets/img/chess/fallback-piece.svg';
 
   /** Ruta de la imagen de la pieza */
   protected readonly imageSrc = computed(() => {

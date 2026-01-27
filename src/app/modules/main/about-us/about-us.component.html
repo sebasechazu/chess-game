@@ -1,0 +1,97 @@
+<app-navbar></app-navbar>
+
+<main class="min-h-screen bg-app-background text-text-primary pb-24 overflow-hidden relative">
+    <!-- Decorative background elements -->
+    <div class="absolute top-20 -left-20 w-96 h-96 bg-app-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div
+        class="absolute bottom-40 -right-20 w-[500px] h-[500px] bg-app-muted/20 rounded-full blur-3xl pointer-events-none">
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 pt-20 relative z-10">
+        <!-- Hero Section -->
+        <div class="text-center mb-24">
+            <span
+                class="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase bg-white/50 border border-app-muted rounded-full text-text-secondary shadow-sm">
+                Nuestra Historia
+            </span>
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight text-text-primary">
+                Sobre <span class="relative">
+                    Nosotros
+                    <svg class="absolute -bottom-2 left-0 w-full h-3 text-app-accent/40" viewBox="0 0 100 10"
+                        preserveAspectRatio="none">
+                        <path d="M0 5 Q 25 0 50 5 T 100 5 L 100 10 L 0 10 Z" fill="currentColor" />
+                    </svg>
+                </span>
+            </h1>
+            <p class="text-xl text-text-secondary max-w-3xl mx-auto font-medium leading-relaxed">
+                ChessMaster nació con una misión simple: democratizar el acceso al ajedrez de alto nivel a través de
+                tecnología de vanguardia y una interfaz premium.
+            </p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-32">
+            @for (stat of stats; track stat.label) {
+            <div
+                class="bg-white p-10 rounded-[2.5rem] border border-app-muted/30 shadow-xl shadow-app-muted/10 text-center hover:scale-105 transition-transform duration-500">
+                <div class="text-4xl font-black text-app-accent mb-2">{{ stat.value }}</div>
+                <div class="text-sm font-bold text-text-muted uppercase tracking-widest">{{ stat.label }}</div>
+            </div>
+            }
+        </div>
+
+        <!-- Content Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-32">
+            <div>
+                <h2 class="text-4xl font-black tracking-tight text-text-primary mb-8">Nuestra Visión del Ajedrez</h2>
+                <div class="space-y-6 text-lg text-text-secondary font-medium leading-relaxed">
+                    <p>
+                        Creemos que el ajedrez es más que un simple juego; es una herramienta para el desarrollo del
+                        pensamiento crítico, la paciencia y la estrategia. Nuestra plataforma utiliza algoritmos de IA
+                        avanzados para proporcionar un análisis preciso y un desafío constante.
+                    </p>
+                    <p>
+                        Desde nuestro lanzamiento, hemos trabajado incansablemente para crear un entorno donde tanto
+                        principiantes como grandes maestros puedan sentirse como en casa, disfrutando de una interfaz
+                        fluida, minimalista y potente.
+                    </p>
+                </div>
+            </div>
+            <div class="relative">
+                <div
+                    class="aspect-square bg-linear-to-br from-app-accent to-gunmetal rounded-[3rem] shadow-2xl relative overflow-hidden group">
+                    <div
+                        class="absolute inset-0 flex items-center justify-center text-white p-12 text-center italic text-2xl font-serif opacity-90 group-hover:scale-110 transition-transform duration-700">
+                        "El ajedrez es la piedra de toque del intelecto."
+                    </div>
+                    <!-- Decorative patterns -->
+                    <div class="absolute inset-0 opacity-10 pointer-events-none"
+                        style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 24px 24px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Section -->
+        <div class="mb-24">
+            <h2 class="text-4xl font-black tracking-tight text-text-primary text-center mb-16">El Equipo</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                @for (member of team; track member.name) {
+                <div
+                    class="bg-white p-10 rounded-[3rem] border border-app-muted/30 shadow-2xl shadow-app-muted/10 flex flex-col md:flex-row items-center gap-8 group hover:border-app-accent/30 transition-all duration-500">
+                    <div
+                        class="w-32 h-32 rounded-3xl overflow-hidden bg-app-muted/10 shrink-0 group-hover:rotate-6 transition-transform">
+                        <img [src]="member.image" [alt]="member.name" class="w-full h-full object-cover">
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h4 class="text-2xl font-black text-text-primary mb-1">{{ member.name }}</h4>
+                        <div class="text-app-accent font-bold text-sm uppercase tracking-widest mb-4">{{ member.role }}
+                        </div>
+                        <p class="text-text-secondary font-medium">{{ member.description }}</p>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</main>

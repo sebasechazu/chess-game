@@ -1,5 +1,5 @@
 import { Component, input, output, ChangeDetectionStrategy, signal, computed } from '@angular/core';
-import { ChessSquare, SquareColor, PieceColor, MoveResult } from '../../helpers/interfaces';
+import { ChessSquare, SquareColor, PieceColor, MoveResult } from '../../../core/helpers/interfaces';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NgClass } from '@angular/common';
 import { ChessPieceComponent } from "../chess-piece/chess-piece.component";
@@ -20,14 +20,14 @@ export class ChessBoardComponent {
 
   readonly columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   readonly rows = [8, 7, 6, 5, 4, 3, 2, 1];
-  readonly SquareColor = SquareColor; 
-  
+  readonly SquareColor = SquareColor;
+
   board = input.required<ChessSquare[][]>();
-  currentTurn = input.required<PieceColor>(); 
+  currentTurn = input.required<PieceColor>();
   gameOver = input<boolean>(false);
   animate = input<boolean>(true);
   validateMove = input<(from: string, to: string) => MoveResult>();
-  
+
   moveAttempt = output<{ from: string; to: string }>();
 
   public hoveredSquare = signal<string | null>(null);
@@ -54,16 +54,16 @@ export class ChessBoardComponent {
   onPieceDrop(event: CdkDragDrop<ChessSquare>) {
     const sourceSquare = event.previousContainer.data;
     const targetSquare = event.container.data;
-    
+
     this.dragging.set(null);
     this.hoveredSquare.set(null);
-    
+
     if (!sourceSquare || !targetSquare) return;
-    
+
     const sourcePosition = sourceSquare.position;
     const targetPosition = targetSquare.position;
     const movingPiece = sourceSquare.piece;
-    
+
     if (!movingPiece || sourcePosition === targetPosition) return;
 
     this.moveAttempt.emit({ from: sourcePosition, to: targetPosition });

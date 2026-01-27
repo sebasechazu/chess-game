@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite/**/*.js";
+
+
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -34,4 +38,16 @@
 
 :root {
     color-scheme: light dark;
+}
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                url('./assets/img/auth-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }

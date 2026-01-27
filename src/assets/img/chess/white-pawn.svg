@@ -1,4 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="45" height="45">
-  <path d="M 22,9 C 19.79,9 18,10.79 18,13 C 18,13.89 18.29,14.71 18.78,15.38 C 16.83,16.5 15.5,18.59 15.5,21 C 15.5,23.03 16.44,24.84 17.91,26.03 C 14.91,27.09 10.5,31.58 10.5,39.5 L 33.5,39.5 C 33.5,31.58 29.09,27.09 26.09,26.03 C 27.56,24.84 28.5,23.03 28.5,21 C 28.5,18.59 27.17,16.5 25.22,15.38 C 25.71,14.71 26,13.89 26,13 C 26,10.79 24.21,9 22,9 z" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!-- Outline -->
+  <path fill="#000" d="M12 4h8v2h-8zM10 6h2v4h-2zM20 6h2v4h-2zM8 10h2v6H8zM22 10h2v6h-2zM10 16h2v4h-2zM20 16h2v4h-2zM8 20h2v6H8zM22 20h2v6h-2zM6 26h20v2H6zM4 28h24v2H4z"/>
+  <!-- Body -->
+  <path fill="#FFF" d="M12 6h8v4h-8zM10 10h12v6H10zM12 16h8v4h-8zM10 20h12v6H10zM8 26h16v2H8zM6 28h20v2H6z"/>
+  <!-- Shading -->
+  <path fill="#B0BEC5" d="M18 6h2v4h-2zM20 10h2v6h-2zM18 16h2v4h-2zM20 20h2v6h-2zM22 26h2v2h-2zM24 28h2v2h-2z"/>
 </svg>

@@ -1,0 +1,49 @@
+<div class="auth-page p-4">
+    <div class="w-full max-w-md bg-app-background p-8 rounded-2xl shadow-2xl border border-app-accent/20">
+        <div class="text-center mb-10 text-text-primary">
+            <h1 class="text-3xl font-bold tracking-tight mb-2">Bienvenido de nuevo</h1>
+            <p class="text-text-secondary">Ingresa tus credenciales para continuar</p>
+        </div>
+
+        @if (loginError()) {
+        <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl text-sm text-center">
+            Credenciales incorrectas. Intenta de nuevo.
+        </div>
+        }
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div class="space-y-2">
+                <label for="email" class="block text-sm font-medium text-text-primary">Correo Electrónico</label>
+                <input id="email" type="email" formControlName="email"
+                    class="w-full px-4 py-3 rounded-xl border border-app-muted bg-transparent text-text-primary focus:ring-2 focus:ring-app-accent focus:border-transparent transition-all outline-none"
+                    placeholder="tu@email.com" />
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label for="password" class="block text-sm font-medium text-text-primary">Contraseña</label>
+                    <a routerLink="/auth/recovery" class="text-xs text-app-accent hover:underline">¿Olvidaste tu
+                        contraseña?</a>
+                </div>
+                <input id="password" type="password" formControlName="password"
+                    class="w-full px-4 py-3 rounded-xl border border-app-muted bg-transparent text-text-primary focus:ring-2 focus:ring-app-accent focus:border-transparent transition-all outline-none"
+                    placeholder="••••••••" />
+            </div>
+
+            <button type="submit" [disabled]="loginForm.invalid || isLoading()"
+                class="w-full py-4 bg-app-accent text-gunmetal font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98]">
+                @if (isLoading()) {
+                <span>Cargando...</span>
+                } @else {
+                <span>Iniciar Sesión</span>
+                }
+            </button>
+        </form>
+
+        <div class="mt-8 text-center text-sm text-text-secondary">
+            ¿No tienes una cuenta?
+            <a routerLink="/auth/register" class="text-app-accent font-semibold hover:underline ml-1">Regístrate
+                gratis</a>
+        </div>
+    </div>
+</div>

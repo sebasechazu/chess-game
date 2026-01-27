@@ -1,0 +1,89 @@
+<div
+    class="flex flex-col h-full bg-white/60 dark:bg-gunmetal/60 backdrop-blur-2xl border border-app-muted/20 rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-300">
+
+    <!-- Compact Header -->
+    <div class="px-6 py-4 border-b border-app-muted/10 bg-app-background/5">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-app-accent animate-pulse"></div>
+                <h2 class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Crónica</h2>
+            </div>
+            <div class="px-2 py-0.5 bg-app-accent/10 rounded-md border border-app-accent/20">
+                <span class="text-[9px] font-black text-app-accent uppercase">{{ moveHistory().length }} mov</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move List Content -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-3" [class.max-h-[350px]]="!isVertical()">
+        @if (moveHistory().length === 0) {
+        <div class="flex flex-col items-center justify-center h-full p-8 text-center opacity-40">
+            <svg class="w-8 h-8 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+                </path>
+            </svg>
+            <p class="text-[10px] font-black uppercase tracking-widest">Esperando jugada...</p>
+        </div>
+        } @else {
+        <div class="divide-y divide-app-muted/5">
+            @for (move of moveHistory(); track $index) {
+            @let isWhite = move.piece.color === 'white';
+            @let turn = Math.floor($index / 2) + 1;
+
+            <div class="flex items-center gap-3 py-1.5 px-3 transition-colors hover:bg-app-accent/5 group">
+                <!-- Turn Number -->
+                <div class="w-6 text-left shrink-0">
+                    @if (isWhite) {
+                    <span class="text-[9px] font-bold text-text-muted/30">{{ turn }}.</span>
+                    }
+                </div>
+
+                <!-- Compact Move Row -->
+                <div class="flex-1 flex items-center justify-between gap-2 overflow-hidden">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <!-- SVG Piece Icon - THEME MATCHED -->
+                        <div
+                            class="w-8 h-8 shrink-0 flex items-center justify-center bg-white/40 dark:bg-black/20 rounded-lg p-0.5 border border-app-muted/5 group-hover:border-app-accent/30 transition-all shadow-sm">
+                            <img [src]="getPiecePath(move.piece)"
+                                class="w-full h-full object-contain image-rendering-pixelated" [alt]="move.piece.type">
+                        </div>
+
+                        <!-- Position Info -->
+                        <div class="flex flex-col overflow-hidden">
+                            <span
+                                class="text-xs font-black font-mono tracking-tighter text-text-primary group-hover:text-app-accent transition-colors">
+                                {{ move.notation }}
+                            </span>
+                            <span
+                                class="text-[7px] font-black text-text-muted/40 uppercase tracking-widest leading-none">
+                                {{ move.from }} > {{ move.to }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Captured piece info (if any) -->
+                    @if (move.captured) {
+                    <div class="flex items-center gap-1.5 opacity-30 group-hover:opacity-100 transition-opacity">
+                        <div class="w-2.5 h-px bg-red-400 rotate-45 transform translate-x-1"></div>
+                        <div
+                            class="w-6 h-6 flex items-center justify-center bg-red-500/10 rounded-md p-1 grayscale group-hover:grayscale-0 transition-all border border-red-500/10">
+                            <img [src]="getPiecePath(move.captured)"
+                                class="w-full h-full object-contain image-rendering-pixelated"
+                                [alt]="'captured ' + move.captured.type">
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+
+    <!-- Minimal Footer -->
+    @if (moveHistory().length > 0) {
+    <div class="px-6 py-3 bg-app-background/5 border-t border-app-muted/10 flex justify-center">
+        <p class="text-[8px] font-black text-text-muted opacity-30 uppercase tracking-[0.2em]">Registro Automático</p>
+    </div>
+    }
+</div>

@@ -140,6 +140,17 @@ export interface ScoreEntry {
 }
 
 /**
+ * Representa un movimiento en el historial enriquecido
+ */
+export interface HistoryMove {
+  piece: { type: PieceType, color: PieceColor };
+  from: string;
+  to: string;
+  captured?: { type: PieceType, color: PieceColor };
+  notation: string;
+}
+
+/**
  * Valores numéricos de las piezas para evaluación
  */
 export const PIECE_VALUES = {

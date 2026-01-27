@@ -1,6 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ModalData } from '../../helpers/interfaces';
+import { ModalData } from '../../core/helpers/interfaces';
 
 @Component({
   selector: 'app-modal-game',

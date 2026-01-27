@@ -10,7 +10,8 @@ import {
   Position,
   ModalData,
   WinnerType,
-  ScoreEntry
+  ScoreEntry,
+  HistoryMove
 } from '../helpers/interfaces';
 
 import {
@@ -45,7 +46,7 @@ export class AppService {
   public currentTurn = signal<PieceColor>(PieceColor.White);
   // Dificultad eliminada: IA siempre juega a nivel fijo
   public aiEnabled = signal<boolean>(true);
-  public moveHistory = signal<string[]>([]);
+  public moveHistory = signal<HistoryMove[]>([]);
   public totalMovements = signal<number>(0);
   public whiteCaptures = signal<number>(0);
   public blackCaptures = signal<number>(0);
@@ -59,17 +60,17 @@ export class AppService {
   public scoreHistory = signal<ScoreEntry[]>([]);
   public gameInitialized = signal<boolean>(false);
   public isDarkMode = signal<boolean>(false);
-  public checkmateWarning = signal<{show: boolean, message: string}>({show: false, message: ''});
+  public checkmateWarning = signal<{ show: boolean, message: string }>({ show: false, message: '' });
   public checkmateConfirmModal = signal<{
-    show: boolean, 
-    fromPos: string, 
-    toPos: string, 
+    show: boolean,
+    fromPos: string,
+    toPos: string,
     onConfirm: (() => void) | null,
     onCancel: (() => void) | null
   }>({
-    show: false, 
-    fromPos: '', 
-    toPos: '', 
+    show: false,
+    fromPos: '',
+    toPos: '',
     onConfirm: null,
     onCancel: null
   });
@@ -88,7 +89,7 @@ export class AppService {
 
   constructor(private aiService: AiService) {
     setTimeout(() => this.showInitialAnimations.set(false), this.INITIAL_ANIMATION_DURATION);
-    
+
     // Inicializar tema desde localStorage
     const savedTheme = localStorage.getItem(this.THEME_KEY);
     if (savedTheme === 'dark') {
@@ -246,7 +247,7 @@ export class AppService {
   public makeMove(fromPos: Position, toPos: Position): MoveResult {
     const piece = getPieceAtPosition(this.board(), fromPos);
     console.log('Making move:', fromPos, 'to', toPos, 'piece:', piece);
-    
+
     // Solo verificar movimientos peligrosos para las blancas (jugador)
     if (piece && piece.color === PieceColor.White) {
       console.log('Checking white piece move for danger...');
@@ -255,11 +256,11 @@ export class AppService {
       if (!simulatedBoard) {
         return { success: false, error: 'Movimiento inválido' };
       }
-      
+
       // Verificar si después de este movimiento, las negras pueden hacer jaque mate
       const canCheckmate = this.canBlackMakeCheckmate(simulatedBoard);
       console.log('Can black make checkmate after this move?', canCheckmate);
-      
+
       if (canCheckmate) {
         console.log('DANGEROUS MOVE DETECTED! Showing confirmation modal...');
         // Mostrar modal de confirmación para advertir al jugador
@@ -268,16 +269,16 @@ export class AppService {
           fromPos,
           toPos,
           onConfirm: () => {
-            this.checkmateConfirmModal.set({show: false, fromPos: '', toPos: '', onConfirm: null, onCancel: null});
+            this.checkmateConfirmModal.set({ show: false, fromPos: '', toPos: '', onConfirm: null, onCancel: null });
             // Ejecutar el movimiento después de la confirmación
             this.executeMove(fromPos, toPos);
           },
           onCancel: () => {
-            this.checkmateConfirmModal.set({show: false, fromPos: '', toPos: '', onConfirm: null, onCancel: null});
+            this.checkmateConfirmModal.set({ show: false, fromPos: '', toPos: '', onConfirm: null, onCancel: null });
             // No hacer nada, el movimiento no se ejecuta
           }
         });
-        
+
         return { success: false, error: 'Esperando confirmación - movimiento peligroso' };
       }
     }
@@ -309,13 +310,13 @@ export class AppService {
     const fromCoords = positionToCoordinates(fromPos);
     const toCoords = positionToCoordinates(toPos);
     const piece = board[fromCoords.row][fromCoords.col].piece;
-    
+
     if (!piece) return null;
 
     // Realizar el movimiento en el tablero simulado
     board[toCoords.row][toCoords.col].piece = piece;
     board[fromCoords.row][fromCoords.col].piece = null;
-    
+
     return board;
   }
 
@@ -387,11 +388,23 @@ export class AppService {
     // limpiar cache delegada
     this.aiService.clearCache();
     if (capturedPiece) this.updateCaptures(capturedPiece.color);
+
+    // Restore missing state updates
     const nextTurn = movedPiece.color === PieceColor.White ? PieceColor.Black : PieceColor.White;
     this.currentTurn.set(nextTurn);
     this.totalMovements.update(v => v + 1);
-    const moveNotation = generateIntuitiveMoveNotation(movedPiece, sourcePos, targetPos, capturedPiece);
-    this.moveHistory.update(h => [...h, moveNotation]);
+
+    const moveNotation = generateMoveNotation(movedPiece, sourcePos, targetPos, capturedPiece);
+    const historyEntry: HistoryMove = {
+      piece: { type: movedPiece.type, color: movedPiece.color },
+      from: sourcePos,
+      to: targetPos,
+      notation: moveNotation
+    };
+    if (capturedPiece) {
+      historyEntry.captured = { type: capturedPiece.type, color: capturedPiece.color };
+    }
+    this.moveHistory.update(h => [...h, historyEntry]);
   }
 
   /**
