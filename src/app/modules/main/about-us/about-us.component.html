@@ -1,96 +1,74 @@
 <app-navbar></app-navbar>
 
-<main class="min-h-screen bg-app-background text-text-primary pb-24 overflow-hidden relative">
+<main class="h-[calc(100vh-64px)] bg-cover bg-center bg-no-repeat relative bg-[url('/nosotros-bg.jpg')] overflow-hidden flex flex-col">
+    <!-- Overlay for legibility based on app-background -->
+    <div class="absolute inset-0 bg-app-background/88 backdrop-blur-[2px] z-0"></div>
+
     <!-- Decorative background elements -->
     <div class="absolute top-20 -left-20 w-96 h-96 bg-app-accent/10 rounded-full blur-3xl pointer-events-none"></div>
     <div
-        class="absolute bottom-40 -right-20 w-[500px] h-[500px] bg-app-muted/20 rounded-full blur-3xl pointer-events-none">
+        class="absolute bottom-40 -right-20 w-125 h-125 bg-app-muted/20 rounded-full blur-3xl pointer-events-none">
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 pt-20 relative z-10">
-        <!-- Hero Section -->
-        <div class="text-center mb-24">
-            <span
-                class="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase bg-white/50 border border-app-muted rounded-full text-text-secondary shadow-sm">
-                Nuestra Historia
-            </span>
-            <h1 class="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight text-text-primary">
-                Sobre <span class="relative">
-                    Nosotros
-                    <svg class="absolute -bottom-2 left-0 w-full h-3 text-app-accent/40" viewBox="0 0 100 10"
-                        preserveAspectRatio="none">
-                        <path d="M0 5 Q 25 0 50 5 T 100 5 L 100 10 L 0 10 Z" fill="currentColor" />
-                    </svg>
-                </span>
+    <div class="max-w-7xl mx-auto w-full h-full relative z-10 flex flex-col p-4 lg:p-10 overflow-hidden">
+        <!-- Minimalist Hero (More compact) -->
+        <div class="text-center mb-6 flex-none">
+            <h1 class="text-3xl lg:text-5xl font-black mb-2 tracking-tighter text-text-primary">
+                Piezas Clave <span class="text-app-accent">detrás del Tablero</span>
             </h1>
-            <p class="text-xl text-text-secondary max-w-3xl mx-auto font-medium leading-relaxed">
-                ChessMaster nació con una misión simple: democratizar el acceso al ajedrez de alto nivel a través de
-                tecnología de vanguardia y una interfaz premium.
+            <p class="text-sm text-text-secondary max-w-2xl mx-auto font-medium opacity-80 leading-snug">
+                Unimos código, diseño e inteligencia para ofrecerte la mejor experiencia de ajedrez digital.
             </p>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-32">
-            @for (stat of stats; track stat.label) {
-            <div
-                class="bg-white p-10 rounded-[2.5rem] border border-app-muted/30 shadow-xl shadow-app-muted/10 text-center hover:scale-105 transition-transform duration-500">
-                <div class="text-4xl font-black text-app-accent mb-2">{{ stat.value }}</div>
-                <div class="text-sm font-bold text-text-muted uppercase tracking-widest">{{ stat.label }}</div>
-            </div>
-            }
-        </div>
-
-        <!-- Content Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-32">
-            <div>
-                <h2 class="text-4xl font-black tracking-tight text-text-primary mb-8">Nuestra Visión del Ajedrez</h2>
-                <div class="space-y-6 text-lg text-text-secondary font-medium leading-relaxed">
-                    <p>
-                        Creemos que el ajedrez es más que un simple juego; es una herramienta para el desarrollo del
-                        pensamiento crítico, la paciencia y la estrategia. Nuestra plataforma utiliza algoritmos de IA
-                        avanzados para proporcionar un análisis preciso y un desafío constante.
+        <!-- Vision and Team Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 items-center">
+            
+            <!-- Vision Side (4 cols) -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <div class="bg-app-surface/40 backdrop-blur-xl p-6 rounded-4xlrder border-app-border relative overflow-hidden group shadow-xl">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-app-accent/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                    <h2 class="text-xl font-black text-text-primary mb-3">Nuestra Esencia</h2>
+                    <p class="text-xs text-text-secondary font-medium leading-relaxed mb-4">
+                        No solo construimos un juego; creamos una herramienta de entrenamiento mental donde cada partida es una oportunidad para superar tus límites.
                     </p>
-                    <p>
-                        Desde nuestro lanzamiento, hemos trabajado incansablemente para crear un entorno donde tanto
-                        principiantes como grandes maestros puedan sentirse como en casa, disfrutando de una interfaz
-                        fluida, minimalista y potente.
+                    <div class="flex items-center gap-3 text-app-accent font-bold text-[10px] uppercase tracking-widest">
+                        <span class="w-8 h-px bg-app-accent"></span>
+                        Estrategia & Innovación
+                    </div>
+                </div>
+                
+                <!-- Quote (more compact) -->
+                <div class="px-4 hidden lg:block">
+                    <p class="text-text-primary italic font-serif text-base leading-snug opacity-90 border-l-4 border-app-accent pl-4">
+                        "El ajedrez es un océano donde un mosquito puede beber y un elefante puede bañarse."
                     </p>
                 </div>
             </div>
-            <div class="relative">
-                <div
-                    class="aspect-square bg-linear-to-br from-app-accent to-gunmetal rounded-[3rem] shadow-2xl relative overflow-hidden group">
-                    <div
-                        class="absolute inset-0 flex items-center justify-center text-white p-12 text-center italic text-2xl font-serif opacity-90 group-hover:scale-110 transition-transform duration-700">
-                        "El ajedrez es la piedra de toque del intelecto."
-                    </div>
-                    <!-- Decorative patterns -->
-                    <div class="absolute inset-0 opacity-10 pointer-events-none"
-                        style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 24px 24px;">
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Team Section -->
-        <div class="mb-24">
-            <h2 class="text-4xl font-black tracking-tight text-text-primary text-center mb-16">El Equipo</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                @for (member of team; track member.name) {
-                <div
-                    class="bg-white p-10 rounded-[3rem] border border-app-muted/30 shadow-2xl shadow-app-muted/10 flex flex-col md:flex-row items-center gap-8 group hover:border-app-accent/30 transition-all duration-500">
-                    <div
-                        class="w-32 h-32 rounded-3xl overflow-hidden bg-app-muted/10 shrink-0 group-hover:rotate-6 transition-transform">
-                        <img [src]="member.image" [alt]="member.name" class="w-full h-full object-cover">
-                    </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-2xl font-black text-text-primary mb-1">{{ member.name }}</h4>
-                        <div class="text-app-accent font-bold text-sm uppercase tracking-widest mb-4">{{ member.role }}
+            <!-- Team Side (8 cols) -->
+            <div class="lg:col-span-8 flex flex-col gap-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-app-muted/30 max-h-full">
+                <!-- Team Cards Grid -->
+                <div class="grid grid-cols-1 gap-3">
+                    @for (member of team; track member.name) {
+                    <div class="bg-app-surface/60 backdrop-blur-md p-4 rounded-3xl border border-app-border flex flex-col md:flex-row items-center gap-5 group hover:bg-app-surface/80 transition-all duration-300 shadow-lg">
+                        <div class="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl overflow-hidden bg-app-muted/10 shrink-0 border border-app-border shadow-inner group-hover:scale-105 transition-transform duration-500">
+                            <img [src]="member.image" [alt]="member.name" class="w-full h-full object-cover">
                         </div>
-                        <p class="text-text-secondary font-medium">{{ member.description }}</p>
+                        <div class="flex-1 text-center md:text-left">
+                            <div class="flex flex-col md:flex-row md:items-baseline justify-between gap-1 mb-1">
+                                <h4 class="text-base lg:text-lg font-black text-text-primary leading-none">{{ member.name }}</h4>
+                                <span class="text-[9px] bg-app-accent/20 text-app-accent px-2 py-0.5 rounded-full font-black uppercase tracking-widest w-fit mx-auto md:mx-0">
+                                    {{ member.role }}
+                                </span>
+                            </div>
+                            <p class="text-[10px] lg:text-xs text-text-secondary font-medium leading-relaxed max-w-xl line-clamp-2 lg:line-clamp-none">
+                                {{ member.description }}
+                            </p>
+                        </div>
                     </div>
+                    }
                 </div>
-                }
             </div>
         </div>
     </div>

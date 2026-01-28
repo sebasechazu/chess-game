@@ -1,0 +1,45 @@
+<div
+    class="group relative overflow-hidden rounded-4xl bg-app-background/40 p-6 lg:p-8 shadow-2xl shadow-off-black/10 border border-app-border/20 hover:border-app-accent/50 transition-all duration-500 cursor-pointer h-full max-w-sm mx-auto w-full backdrop-blur-xl">
+
+    <!-- Background Image -->
+    <div
+        class="absolute inset-0 z-0 overflow-hidden">
+        <img [src]="type() === 'pvp' ? '/pvp.jpg' : '/pvia.jpg'" 
+             class="w-full h-full object-cover opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 blur-[1px] group-hover:blur-0"
+             [alt]="type()">
+        <!-- Gradient Overlay to improve text legibility -->
+        <div class="absolute inset-0 bg-linear-to-t from-app-background/90 via-app-background/20 to-transparent"></div>
+    </div>
+
+    <div class="relative z-10 text-left flex flex-col h-full">
+        <!-- Icon Badge -->
+        <div [class]="iconBadgeClass()"
+            class="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center mb-6 border border-app-border/20 shadow-xl transition-all duration-500"
+            [class.group-hover:shadow-app-accent/40]="type() === 'pvp'"
+            [class.group-hover:shadow-app-surface/20]="type() === 'pvai'"
+            [class.group-hover:rotate-12]="type() === 'pvp'" 
+            [class.group-hover:-rotate-12]="type() === 'pvai'">
+            @if (type() === 'pvp') {
+            <mat-icon [class]="iconClass()" class="w-8! h-8! lg:w-9! lg:h-9! text-2xl! lg:text-3xl!">groups</mat-icon>
+            } @else {
+            <mat-icon [class]="iconClass()" class="w-8! h-8! lg:w-9! lg:h-9! text-2xl! lg:text-3xl!">smart_toy</mat-icon>
+            }
+        </div>
+
+        <h2 class="text-2xl lg:text-3xl font-black mb-2 text-text-primary drop-shadow-sm tracking-tight">{{ title() }}</h2>
+        <p class="text-text-secondary mb-6 lg:mb-8 text-sm lg:text-base font-medium leading-relaxed grow">
+            {{ description() }}
+        </p>
+
+        <a [routerLink]="['/game']" [queryParams]="{ mode: type() }" [class]="buttonClass()"
+            class="inline-flex items-center px-6 lg:px-8 py-3 lg:py-4 font-black rounded-2xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 w-fit text-sm lg:text-base uppercase tracking-widest border-2">
+            {{ buttonText() }}
+            @if (type() === 'pvp') {
+            <mat-icon
+                class="ml-3 transition-transform w-5! h-5! lg:w-6! lg:h-6! text-lg! lg:text-xl! group-hover:translate-x-1">arrow_forward</mat-icon>
+            } @else {
+            <mat-icon class="ml-3 transition-transform w-5! h-5! lg:w-6! lg:h-6! text-lg! lg:text-xl! group-hover:rotate-12">bolt</mat-icon>
+            }
+        </a>
+    </div>
+</div>

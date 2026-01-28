@@ -1,108 +1,101 @@
 <app-navbar></app-navbar>
 
-<main class="min-h-screen bg-app-background text-text-primary pb-24 overflow-hidden relative">
+<main class="h-[calc(100vh-64px)] bg-cover bg-center bg-no-repeat relative bg-[url('/clasificacion-bg.jpg')] overflow-hidden flex flex-col">
+    <!-- Overlay for legibility based on app-background -->
+    <div class="absolute inset-0 bg-app-background/85 backdrop-blur-[2px] z-0"></div>
+    
     <!-- Decorative background elements -->
     <div class="absolute top-20 -left-20 w-96 h-96 bg-app-accent/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-40 -right-20 w-[500px] h-[500px] bg-app-muted/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-40 -right-20 w-125 h-125 bg-app-muted/20 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div class="max-w-7xl mx-auto px-4 pt-20 relative z-10">
+    <div class="max-w-7xl mx-auto w-full h-full relative z-10 flex flex-col p-4 lg:p-6 overflow-hidden">
         <!-- Header Section -->
-        <div class="mb-16">
-            <span class="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase bg-white/50 border border-app-muted rounded-full text-text-secondary shadow-sm">
-                Competición Global
-            </span>
-            <h1 class="text-5xl font-extrabold mb-4 tracking-tight text-text-primary">
-                Clasificación y <span class="relative">
-                    Historial
-                    <svg class="absolute -bottom-2 left-0 w-full h-3 text-app-accent/40" viewBox="0 0 100 10" preserveAspectRatio="none">
-                        <path d="M0 5 Q 25 0 50 5 T 100 5 L 100 10 L 0 10 Z" fill="currentColor" />
-                    </svg>
-                </span>
+        <div class="mb-6 flex-none text-center">
+            <h1 class="text-3xl lg:text-4xl font-black mb-1 tracking-tight text-text-primary">
+                Clasificación y Historial
             </h1>
-            <p class="text-xl text-text-secondary max-w-2xl font-medium leading-relaxed">
-                Sigue tu progreso y compárate con los mejores jugadores de nuestra comunidad.
+            <p class="text-sm text-text-secondary font-medium opacity-80">
+                Sigue tu progreso y compárate con los mejores de la comunidad.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden min-h-0">
             <!-- Ranking Section (2/3 width on large screens) -->
-            <div class="lg:col-span-2">
-                <div class="flex items-center justify-between mb-8">
-                    <h3 class="text-3xl font-black tracking-tight text-text-primary">Top Jugadores</h3>
+            <div class="lg:col-span-2 flex flex-col min-h-0">
+                <div class="flex items-center justify-between mb-4 flex-none">
+                    <h3 class="text-2xl font-black tracking-tight text-text-primary">Top Jugadores</h3>
                     <div class="flex space-x-2">
-                        <span class="px-3 py-1 bg-app-accent/10 text-app-accent text-xs font-bold rounded-lg">LIVE</span>
+                        <span class="px-3 py-1 bg-app-accent/10 text-app-accent text-[10px] font-bold rounded-lg uppercase">EN VIVO</span>
                     </div>
                 </div>
 
-                <div class="overflow-hidden bg-white shadow-2xl shadow-app-muted/30 rounded-[2.5rem] border border-app-muted/30">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-app-muted/5 border-b border-app-muted/20">
-                                <th class="px-8 py-6 text-sm font-bold text-text-secondary uppercase tracking-wider">Rango</th>
-                                <th class="px-8 py-6 text-sm font-bold text-text-secondary uppercase tracking-wider">Jugador</th>
-                                <th class="px-8 py-6 text-sm font-bold text-text-secondary uppercase tracking-wider">Rating</th>
-                                <th class="px-8 py-6 text-sm font-bold text-text-secondary uppercase tracking-wider text-right">Win Rate</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-app-muted/10">
-                            @for (player of rankingSignals(); track player.rank) {
-                            <tr class="hover:bg-app-accent/5 transition-colors group">
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <span class="flex items-center justify-center w-8 h-8 rounded-full font-black text-sm" 
-                                          [class.bg-yellow-100.text-yellow-700]="player.rank === 1"
-                                          [class.bg-slate-200.text-slate-700]="player.rank === 2"
-                                          [class.bg-orange-100.text-orange-700]="player.rank === 3"
-                                          [class.bg-app-muted/10.text-text-secondary]="player.rank > 3">
-                                        {{ player.rank }}
-                                    </span>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 rounded-full bg-app-muted/20 flex items-center justify-center mr-4 text-app-accent font-black text-lg">
-                                            {{ player.name.charAt(0) }}
+                <div class="flex-1 overflow-hidden bg-app-surface shadow-xl shadow-app-muted/20 rounded-4xl border border-app-border flex flex-col min-h-0">
+                    <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-app-muted/30">
+                        <table class="w-full text-left">
+                            <thead class="sticky top-0 bg-app-surface/90 backdrop-blur-md z-10">
+                                <tr class="bg-app-muted/5 border-b border-app-border/30">
+                                    <th class="px-6 py-4 text-[11px] font-bold text-text-secondary uppercase tracking-widest">Rango</th>
+                                    <th class="px-6 py-4 text-[11px] font-bold text-text-secondary uppercase tracking-widest">Jugador</th>
+                                    <th class="px-6 py-4 text-[11px] font-bold text-text-secondary uppercase tracking-widest">Rating</th>
+                                    <th class="px-6 py-4 text-[11px] font-bold text-text-secondary uppercase tracking-widest text-right">Victoria</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-app-border/20">
+                                @for (player of rankingSignals(); track player.rank) {
+                                <tr class="hover:bg-app-accent/5 transition-colors group">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center justify-center w-8 h-8 rounded-full font-black text-sm" 
+                                              [class.bg-app-accent/20.text-text-primary]="player.rank <= 3"
+                                              [class.bg-app-muted/10.text-text-secondary]="player.rank > 3">
+                                            {{ player.rank }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 rounded-full bg-app-muted/20 flex items-center justify-center mr-4 text-app-accent font-black text-lg">
+                                                {{ player.name.charAt(0) }}
+                                            </div>
+                                            <span class="font-bold text-text-primary text-base">{{ player.name }}</span>
                                         </div>
-                                        <span class="font-bold text-text-primary text-base">{{ player.name }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 font-bold text-text-secondary text-base">
-                                    {{ player.rating }}
-                                </td>
-                                <td class="px-8 py-6 text-right">
-                                    <span class="text-base font-black text-app-accent">
-                                        {{ player.winRate }}
-                                    </span>
-                                </td>
-                            </tr>
-                            }
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-text-secondary text-base">
+                                        {{ player.rating }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span class="text-base font-black text-app-accent">
+                                            {{ player.winRate }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Recent History Section (1/3 width on large screens) -->
-            <div class="lg:col-span-1">
-                <div class="flex items-center justify-between mb-8">
-                    <h3 class="text-3xl font-black tracking-tight text-text-primary">Tu Historial</h3>
+            <div class="lg:col-span-1 flex flex-col min-h-0">
+                <div class="flex items-center justify-between mb-4 flex-none">
+                    <h3 class="text-2xl font-black tracking-tight text-text-primary">Tu Historial</h3>
                 </div>
 
-                <div class="bg-white shadow-2xl shadow-app-muted/30 rounded-[2.5rem] border border-app-muted/30 p-2">
-                    <div class="space-y-2">
+                <div class="flex-1 overflow-y-auto bg-app-surface shadow-xl shadow-app-muted/20 rounded-4xl border border-app-border p-4 scrollbar-thin scrollbar-thumb-app-muted/30">
+                    <div class="space-y-4">
                         @for (match of recentMatches(); track $index) {
-                        <div class="p-6 rounded-[1.8rem] transition-colors border border-transparent hover:border-app-muted/20 hover:bg-app-muted/5 group">
-                            <div class="flex justify-between items-start mb-4">
+                        <div class="p-5 rounded-3xl transition-colors border border-transparent hover:border-app-border/50 hover:bg-app-accent/5 group bg-app-background/40">
+                            <div class="flex justify-between items-start mb-3">
                                 <div class="flex flex-col">
-                                    <span class="text-xs font-bold text-text-muted uppercase tracking-widest mb-1">{{ match.date | date:'dd MMM, HH:mm' }}</span>
+                                    <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">{{ match.date | date:'dd MMM, HH:mm' }}</span>
                                     <span [class]="getWinnerClass(match.winner)" class="inline-block px-3 py-1 rounded-full bg-opacity-10 text-[10px] font-black w-fit">
                                         {{ getWinnerLabel(match.winner).toUpperCase() }}
                                     </span>
                                 </div>
-                                <span class="text-2xl font-black text-app-accent group-hover:scale-110 transition-transform">+{{ match.score }}</span>
+                                <span class="text-xl font-black text-app-accent group-hover:scale-110 transition-transform">+{{ match.score }}</span>
                             </div>
-                            <div class="flex items-center text-sm font-bold text-text-secondary">
-                                <svg class="w-4 h-4 mr-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                {{ match.moves }} jugadas en total
+                            <div class="flex items-center text-xs font-bold text-text-secondary">
+                                <mat-icon class="w-4! h-4! text-base! mr-2 opacity-50">bolt</mat-icon>
+                                {{ match.moves }} jugadas
                             </div>
                         </div>
                         }

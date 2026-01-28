@@ -14,25 +14,32 @@
     --color-muted-teal: #9dcbbaff;
     --color-celadon: #abebd2ff;
     --color-spring-green: #04f06aff;
+    /* Colores neutros suavizados */
+    --color-off-white: #f8fafcff;
+    --color-off-black: #0f172aff;
 
-    /* Tema Claro - Usando la paleta exacta */
-    --color-app-background: var(--color-celadon);
+    /* Tema Claro */
+    --color-app-background: var(--color-off-white);
+    --color-app-surface: var(--color-celadon);
     --color-app-accent: var(--color-spring-green);
     --color-app-muted: var(--color-muted-teal);
-    --color-text-primary: var(--color-gunmetal);
-    --color-text-secondary: var(--color-taupe-grey);
-    --color-text-muted: var(--color-gunmetal);
+    --color-app-border: var(--color-taupe-grey);
+    --color-text-primary: var(--color-off-black);
+    --color-text-secondary: var(--color-gunmetal);
+    --color-text-muted: var(--color-taupe-grey);
 }
 
 /* Tema Oscuro - Sobrescribir variables cuando .dark está presente */
 @layer theme {
     .dark {
-        --color-app-background: var(--color-gunmetal);
+        --color-app-background: var(--color-off-black);
+        --color-app-surface: var(--color-gunmetal);
         --color-app-accent: var(--color-spring-green);
         --color-app-muted: var(--color-taupe-grey);
-        --color-text-primary: var(--color-celadon);
-        --color-text-secondary: var(--color-muted-teal);
-        --color-text-muted: var(--color-celadon);
+        --color-app-border: var(--color-muted-teal);
+        --color-text-primary: var(--color-off-white);
+        --color-text-secondary: var(--color-celadon);
+        --color-text-muted: var(--color-muted-teal);
     }
 }
 

@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { AppService } from '../../../core/services/app.service';
 import { NavbarComponent } from '../../../shared/navbar/navbar.component';
 
 @Component({
     selector: 'app-classification',
-    imports: [CommonModule, NavbarComponent],
+    imports: [CommonModule, NavbarComponent, MatIconModule],
     templateUrl: './classification.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -1,46 +1,43 @@
-<app-navbar></app-navbar>
+<div class="h-screen flex flex-col overflow-hidden bg-cover bg-center bg-no-repeat relative bg-[url('/home-bg.jpg')]">
+    <div class="absolute inset-0 bg-app-background/80 backdrop-blur-[2px] z-0"></div>
+    <app-navbar class="relative z-20"></app-navbar>
 
-<main class="min-h-screen bg-app-background text-text-primary pb-24 overflow-hidden relative">
-    <!-- Decorative background elements -->
-    <div class="absolute top-20 -left-20 w-96 h-96 bg-app-accent/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div
-        class="absolute bottom-40 -right-20 w-[500px] h-[500px] bg-app-muted/20 rounded-full blur-3xl pointer-events-none">
-    </div>
-
-    <!-- Hero Section -->
-    <section class="max-w-7xl mx-auto px-4 pt-20 pb-12 text-center relative z-10">
-        <span
-            class="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase bg-white/50 border border-app-muted rounded-full text-text-secondary shadow-sm">
-            La mejor plataforma de ajedrez
-        </span>
-        <h1 class="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight text-text-primary">
-            Domina el <span class="relative">
-                Tablero
-                <svg class="absolute -bottom-2 left-0 w-full h-3 text-app-accent/40" viewBox="0 0 100 10"
-                    preserveAspectRatio="none">
-                    <path d="M0 5 Q 25 0 50 5 T 100 5 L 100 10 L 0 10 Z" fill="currentColor" />
-                </svg>
-            </span>
-        </h1>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto mb-16 font-medium leading-relaxed">
-            Mejora tus habilidades, compite en torneos globales o desafía a nuestra inteligencia artificial de última
-            generación.
-        </p>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-24">
-            <!-- PvP Card -->
-            <app-game-mode-card type="pvp" title="Jugador vs Jugador"
-                description="Enfréntate a oponentes de todo el mundo, sube de rango y conviértete en Gran Maestro."
-                buttonText="JUGAR AHORA">
-            </app-game-mode-card>
-
-            <!-- PvAI Card -->
-            <app-game-mode-card type="pvai" title="Jugador vs IA"
-                description="Entrena tus aperturas y tácticas con nuestra IA inteligente ajustable a cualquier nivel."
-                buttonText="DESAFIAR IA">
-            </app-game-mode-card>
+    <main class="flex-1 text-text-primary relative flex items-center justify-center overflow-hidden p-6 z-10">
+        <!-- Decorative background elements -->
+        <div class="absolute top-20 -left-20 w-96 h-96 bg-app-accent/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-40 -right-20 w-125 h-125 bg-app-muted/30 rounded-full blur-3xl pointer-events-none">
         </div>
-    </section>
 
+        <!-- Hero Section -->
+        <section class="max-w-6xl w-full mx-auto text-center relative z-10">
+            <span
+                class="inline-block px-4 py-1.5 mb-6 text-[11px] font-bold tracking-[0.2em] uppercase bg-app-surface/20 border border-app-border/30 rounded-full text-app-accent shadow-xl backdrop-blur-md">
+                La mejor plataforma de ajedrez
+            </span>
+            <h1 class="text-5xl md:text-6xl lg:text-8xl font-black mb-4 tracking-tighter text-text-primary drop-shadow-2xl">
+                Domina el <span class="relative">
+                    Tablero
+                    <svg class="absolute -bottom-2 left-0 w-full h-3 text-app-accent" viewBox="0 0 100 10"
+                        preserveAspectRatio="none">
+                        <path d="M0 5 Q 25 0 50 5 T 100 5 L 100 10 L 0 10 Z" fill="currentColor" />
+                    </svg>
+                </span>
+            </h1>
+            <p class="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto mb-10 font-medium leading-relaxed drop-shadow-md">
+                Mejora tus habilidades, compite en torneos globales o desafía a nuestra inteligencia artificial de última
+                generación.
+            </p>
 
-</main>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- PvP Card -->
+                <game-mode-card type="pvp" title="Jugador vs Jugador"
+                    description="Enfréntate a oponentes de todo el mundo y sube de rango."
+                    buttonText="JUGAR AHORA" />
+                <!-- PvAI Card -->
+                <game-mode-card type="pvai" title="Jugador vs IA"
+                    description="Entrena tus aperturas y tácticas con nuestra IA inteligente."
+                    buttonText="DESAFIAR IA" />
+            </div>
+        </section>
+    </main>
+</div>
